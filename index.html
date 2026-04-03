@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orienteering Race Visualizer (URL Input)</title>
+    <title>Orienteering Race Visualizer</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -191,6 +191,11 @@
                 <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Load from
                     File</label>
             </div>
+            <div style="margin-bottom: 15px;">
+                <label><input type="radio" name="raceType" value="normal" checked> Normal</label>
+                <label style="margin-left: 20px;"><input type="radio" name="raceType" value="mass"> Mass start with
+                    forkings</label>
+            </div>
             <div id="urlInputSection" class="file-input-wrapper">
                 <input id="urlInput" type="text"
                     placeholder="Enter URL of race HTML file (e.g. http://localhost:8000/v260326.html)">
@@ -374,7 +379,7 @@
                 document.getElementById('metricSelect').addEventListener('change', () => this.visualize());
             }
 
-            async loadFromUrl(url) {
+            async loadFromUrl(url, createCombined = true) {
                 if (!url) {
                     this.showMessage('Please enter a valid URL', 'error');
                     return;
@@ -393,14 +398,14 @@
                     if (charset && charset.toLowerCase() !== 'utf-8') {
                         html = new TextDecoder('iso-8859-1').decode(buffer);
                     }
-                    this.loadAndParse(html);
+                    this.loadAndParse(html, createCombined);
                 } catch (err) {
                     console.error('Fetch error:', err);
                     this.showMessage('Unable to fetch file: ' + err.message, 'error');
                 }
             }
 
-            loadAndParse(htmlContent) {
+            loadAndParse(htmlContent, createCombined = true) {
                 try {
                     this.categories = this.parser.parseRaceData(htmlContent);
                     const categoryCount = Object.keys(this.categories).length;
@@ -412,7 +417,9 @@
                         return false;
                     }
 
-                    this.categories['Combined'] = this.createCombinedCategory(this.categories);
+                    if (createCombined) {
+                        this.categories['Combined'] = this.createCombinedCategory(this.categories);
+                    }
 
                     this.initializeUI();
                     this.showMessage(`Successfully loaded ${categoryCount} categories with ${totalRunners} runners`, 'success');
@@ -665,6 +672,12 @@
             });
         });
 
+        // Check URL parameters for direct linking
+        const raceTypeParam = getQueryParam('raceType');
+        if (raceTypeParam === 'mass') {
+            document.querySelector('input[name="raceType"][value="mass"]').checked = true;
+        }
+
         function getQueryParam(param) {
             const searchParams = new URLSearchParams(window.location.search);
             return searchParams.get(param);
@@ -672,9 +685,11 @@
 
         function loadData() {
             const inputType = document.querySelector('input[name="inputType"]:checked').value;
+            const raceType = document.querySelector('input[name="raceType"]:checked').value;
+            const createCombined = raceType === 'mass';
             if (inputType === 'url') {
                 const url = document.getElementById('urlInput').value.trim();
-                visualizer.loadFromUrl(url);
+                visualizer.loadFromUrl(url, createCombined);
             } else {
                 const file = document.getElementById('fileInput').files[0];
                 if (!file) {
@@ -690,7 +705,7 @@
                     if (charset && charset.toLowerCase() !== 'utf-8') {
                         html = new TextDecoder('iso-8859-1').decode(buffer);
                     }
-                    visualizer.loadAndParse(html);
+                    visualizer.loadAndParse(html, createCombined);
                 };
                 reader.onerror = () => {
                     visualizer.showMessage('Error reading file', 'error');
