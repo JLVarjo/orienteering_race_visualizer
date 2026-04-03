@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orienteering Race Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .controls select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .controls select:hover {
+            border-color: #667eea;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin-bottom: 40px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            color: #333;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #fcc;
+        }
+
+        .legend-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🏃 Orienteering Race Visualizer</h1>
+        <div class="subtitle">Race situation visualization at each control</div>
+
+        <div class="controls">
+            <label for="categorySelect">Race Category:</label>
+            <select id="categorySelect">
+                <option value="">Loading data...</option>
+            </select>
+
+            <label for="metricSelect">Metric:</label>
+            <select id="metricSelect">
+                <option value="time">Split Time (seconds)</option>
+                <option value="position">Position</option>
+            </select>
+        </div>
+
+        <div id="errorContainer"></div>
+
+        <div class="chart-container">
+            <canvas id="raceChart"></canvas>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Controls Analyzed</div>
+                <div class="stat-value" id="controlCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Runners (Valid Results)</div>
+                <div class="stat-value" id="runnerCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Race Categories</div>
+                <div class="stat-value" id="categoryCount">-</div>
+            </div>
+        </div>
+
+        <div class="legend-info">
+            <strong>ℹ️ How to read the graph:</strong><br>
+            Each line represents a runner. The graph shows their position or time at each common control across all race
+            forkings.
+            Runners with disqualified status (Hyl¤tty/Keskeytti) are excluded from the visualization.
+        </div>
+    </div>
+
+    <script>
+        // TypeScript compiled to JavaScript
+        class RaceDataParser {
+            parseHTMLContent(htmlContent) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const categories = {};
+
+                // Find all pre elements which contain the race data
+                const preElements = Array.from(doc.querySelectorAll('pre'));
+
+                preElements.forEach((preEl) => {
+                    const content = preEl.textContent;
+
+                    // Find category name from preceding h3
+                    let categoryName = null;
+                    let prevElement = preEl.previousElementSibling;
+
+                    while (prevElement) {
+                        if (prevElement.tagName === 'H3') {
+                            const text = prevElement.textContent.trim();
+                            const match = text.match(/^([A-Z]{3})/);
+                            if (match) {
+                                categoryName = match[1];
+                            }
+                            break;
+                        }
+                        prevElement = prevElement.previousElementSibling;
+                    }
+
+                    if (categoryName) {
+                        const parsed = this.parseCategory(categoryName, content);
+                        if (parsed.runners.length > 0 && parsed.controls.length > 0) {
+                            categories[categoryName] = parsed;
+                        }
+                    }
+                });
+
+                return categories;
+            }
+
+            parseCategory(categoryName, content) {
+                const lines = content.split('\n');
+                let controls = [];
+                const runners = [];
+                let headerFound = false;
+                let headerIdx = -1;
+
+                // Find header line with control codes
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('[') && lines[i].includes('Tulos')) {
+                        controls = this.extractControlCodes(lines[i]);
+                        headerFound = true;
+                        headerIdx = i;
+                        break;
+                    }
+                }
+
+                if (!headerFound || controls.length === 0) {
+                    return { controls: [], runners: [], categoryName };
+                }
+
+                // Parse rider lines starting after header
+                for (let i = headerIdx + 1; i < lines.length; i++) {
+                    const line = lines[i];
+
+                    // Look for lines that start with whitespace + number + period + name
+                    if (!line.match(/^\s+\d+\./)) continue;
+
+                    const trimmed = line.trim();
+
+                    // Skip disqualified runners
+                    if (trimmed.includes('Hylätty') || trimmed.includes('Keskeytti') ||
+                        trimmed.includes('Keskeytti') || trimmed.endsWith('-')) {
+                        continue;
+                    }
+
+                    // Must contain at least one time (to be non-disqualified)
+                    if (!trimmed.match(/\d\-(?:\d+\.\d{2}\.\d{2}|\d{1,2}\.\d{2})/)) {
+                        continue;
+                    }
+
+                    // Extract runner name and times
+                    const nameMatch = trimmed.match(/^\d+\.\s+(.+?)(\s{2,}|\s+\d\-)/);
+                    if (!nameMatch) continue;
+
+                    const runnerName = nameMatch[1].trim();
+                    const times = this.extractTimesFromLine(line, controls.length);
+
+                    // Only include runners with complete split times for all controls
+                    if (times.length === controls.length) {
+                        runners.push({
+                            name: runnerName,
+                            times
+                        });
+                    }
+                }
+
+                return {
+                    controls,
+                    runners,
+                    categoryName
+                };
+            }
+
+            extractControlCodes(headerLine) {
+                const regex = /\[(\d{3})\]/g;
+                const controls = [];
+                let match;
+
+                while ((match = regex.exec(headerLine)) !== null) {
+                    controls.push(match[1]);
+                }
+
+                return controls;
+            }
+
+            extractTimesFromLine(timeLineStr, expectedCount) {
+                const times = [];
+                // Match formats: X-MM.SS (minutes.seconds) or X-H.MM.SS (hour.minutes.seconds)
+                const pattern = /\d\-(?:(\d+)\.(\d{2})\.(\d{2})|(\d{1,2})\.(\d{2}))/g;
+                let match;
+
+                while ((match = pattern.exec(timeLineStr)) !== null && times.length < expectedCount) {
+                    let totalSeconds = 0;
+
+                    if (match[1] !== undefined) {
+                        // H.MM.SS format
+                        const hours = parseInt(match[1], 10);
+                        const minutes = parseInt(match[2], 10);
+                        const seconds = parseInt(match[3], 10);
+                        totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                    } else {
+                        // MM.SS format
+                        const minutes = parseInt(match[4], 10);
+                        const seconds = parseInt(match[5], 10);
+                        totalSeconds = minutes * 60 + seconds;
+                    }
+
+                    times.push(totalSeconds);
+                }
+
+                return times;
+            }
+
+            extractResultTime(line, controlCount) {
+                // Extract the last value which is the total time
+                const match = line.match(/(\d{1,3})[:\-](\d{2})(?:\.(\d{2}))?$/);
+                if (match) {
+                    const minutes = parseInt(match[1]);
+                    const seconds = parseInt(match[2]);
+                    const centiseconds = match[3] ? parseInt(match[3]) : 0;
+                    return minutes * 60 + seconds + centiseconds / 100;
+                }
+                return null;
+            }
+
+            isDisqualified(resultStr) {
+                if (typeof resultStr !== 'string') return false;
+                return resultStr.includes('Hyl') || resultStr.includes('Keskeytti') ||
+                    resultStr.includes('---') || resultStr.trim().startsWith('-');
+            }
+
+            findCommonControls(categories) {
+                const validCategories = Object.values(categories).filter(cat => cat.controls.length > 0);
+                if (validCategories.length === 0) return [];
+
+                const controlStats = {};
+                validCategories.forEach(cat => {
+                    cat.controls.forEach((control, idx) => {
+                        if (!controlStats[control]) {
+                            controlStats[control] = { count: 0, positions: new Set() };
+                        }
+                        controlStats[control].count += 1;
+                        controlStats[control].positions.add(idx);
+                    });
+                });
+
+                const expectedCategories = validCategories.length;
+                const commonControls = Object.entries(controlStats)
+                    .filter(([_, info]) => info.count === expectedCategories && info.positions.size === 1)
+                    .sort((a, b) => [...a[1].positions][0] - [...b[1].positions][0])
+                    .map(([control]) => control);
+
+                return commonControls;
+            }
+
+            mergeRacers(categories, commonControls) {
+                const commonSet = new Set(commonControls);
+                const mergedRacers = {};
+
+                Object.entries(categories).forEach(([catName, catData]) => {
+                    catData.runners.forEach(runner => {
+                        if (!mergedRacers[runner.name]) {
+                            mergedRacers[runner.name] = {
+                                times: runner.times,
+                                controls: catData.controls
+                            };
+                        }
+                    });
+                });
+
+                return mergedRacers;
+            }
+        }
+
+        class VisualizationManager {
+            constructor() {
+                this.chart = null;
+                this.categories = {};
+                this.commonControls = [];
+                this.mergedRacers = {};
+                this.parser = new RaceDataParser();
+            }
+
+            async loadData() {
+                try {
+                    const response = await fetch('v260326.html');
+                    const htmlContent = await response.text();
+
+                    this.categories = this.parser.parseHTMLContent(htmlContent);
+                    this.commonControls = this.parser.findCommonControls(this.categories);
+                    this.mergedRacers = this.parser.mergeRacers(this.categories, this.commonControls);
+
+                    // Filter out empty categories
+                    const validCategories = {};
+                    Object.entries(this.categories).forEach(([key, val]) => {
+                        if (val.runners && val.runners.length > 0) {
+                            validCategories[key] = val;
+                        }
+                    });
+                    this.categories = validCategories;
+
+                    // Create combined category
+                    this.categories['Combined'] = this.createCombinedCategory();
+
+                    this.updateUI();
+                } catch (error) {
+                    this.showError('Failed to load race data: ' + error.message);
+                    console.error(error);
+                }
+            }
+
+            updateUI() {
+                this.populateCategorySelect();
+                this.updateStats();
+                this.visualizeFirstCategory();
+            }
+
+            populateCategorySelect() {
+                const select = document.getElementById('categorySelect');
+                select.innerHTML = '';
+
+                Object.keys(this.categories).sort().forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    select.appendChild(option);
+                });
+
+                select.addEventListener('change', () => this.visualizeCategory());
+            }
+
+            visualizeFirstCategory() {
+                const categories = Object.keys(this.categories).sort();
+                if (categories.length > 0) {
+                    document.getElementById('categorySelect').value = categories[0];
+                    this.visualizeCategory();
+                }
+            }
+
+            visualizeCategory() {
+                const selectedCategory = document.getElementById('categorySelect').value;
+                const metric = document.getElementById('metricSelect').value;
+
+                if (!selectedCategory || !this.categories[selectedCategory]) return;
+
+                const category = this.categories[selectedCategory];
+                const controlLabels = category.controls.map(c => `[${c}]`);
+
+                const datasets = this.createDatasets(category, metric);
+
+                const ctx = document.getElementById('raceChart').getContext('2d');
+
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+
+                const title = metric === 'time'
+                    ? `${selectedCategory} - Time Behind Leader at Each Control`
+                    : `${selectedCategory} - Runner Position at Each Control`;
+
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: controlLabels,
+                        datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: title,
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    padding: 15,
+                                    font: { size: 10 },
+                                    boxWidth: 12
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: metric === 'time' ? 'Time behind leader (seconds)' : 'Position'
+                                },
+                                beginAtZero: metric === 'position',
+                                reverse: true
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Control Code'
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            }
+
+            createDatasets(category, metric) {
+                const colors = this.generateColors(category.runners.length);
+
+                return category.runners.map((runner, idx) => {
+                    const data = metric === 'time'
+                        ? this.calculateTimeDifferences(runner.times, category.runners)
+                        : this.calculatePositions(runner.times, category.runners);
+
+                    return {
+                        label: runner.name,
+                        data,
+                        borderColor: colors[idx],
+                        backgroundColor: colors[idx] + '20',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: colors[idx],
+                        borderWidth: 2
+                    };
+                });
+            }
+
+            calculatePositions(runnerTimes, allRunners) {
+                const positions = [];
+
+                for (let i = 0; i < runnerTimes.length; i++) {
+                    let position = 1;
+                    const currentTime = runnerTimes[i];
+
+                    if (currentTime === null || currentTime === undefined) {
+                        positions.push(null);
+                        continue;
+                    }
+
+                    for (const runner of allRunners) {
+                        const otherTime = runner.times[i];
+                        if (otherTime !== null &&
+                            otherTime !== undefined &&
+                            otherTime < currentTime) {
+                            position++;
+                        }
+                    }
+
+                    positions.push(position);
+                }
+
+                return positions;
+            }
+
+            calculateTimeDifferences(runnerTimes, allRunners) {
+                return runnerTimes.map((time, idx) => {
+                    if (time === null || time === undefined) return null;
+                    // Find the minimum time at this control
+                    let minTime = Infinity;
+                    for (const runner of allRunners) {
+                        const otherTime = runner.times[idx];
+                        if (otherTime !== null && otherTime !== undefined && otherTime < minTime) {
+                            minTime = otherTime;
+                        }
+                    }
+                    return time - minTime;
+                });
+            }
+
+            generateColors(count) {
+                const colors = [];
+                const hueStep = 360 / Math.max(count, 1);
+
+                for (let i = 0; i < count; i++) {
+                    const hue = (i * hueStep) % 360;
+                    const saturation = 65 + ((i % 3) * 10);
+                    const lightness = 45 + ((i % 2) * 10);
+                    colors.push(`hsl(${Math.round(hue)}, ${saturation}%, ${lightness}%)`);
+                }
+                return colors;
+            }
+
+            createCombinedCategory() {
+                const categoryNames = Object.keys(this.categories).filter(name => name !== 'Combined');
+                if (categoryNames.length === 0) return null;
+
+                // Build entries by code@position across categories
+                const entryStats = {};
+                categoryNames.forEach(catName => {
+                    const cat = this.categories[catName];
+                    cat.controls.forEach((control, idx) => {
+                        const key = `${control}@${idx}`;
+                        if (!entryStats[key]) {
+                            entryStats[key] = { count: 0, control, index: idx };
+                        }
+                        entryStats[key].count += 1;
+                    });
+                });
+
+                const expectedCategories = categoryNames.length;
+                const commonEntries = Object.values(entryStats)
+                    .filter(entry => entry.count === expectedCategories)
+                    .sort((a, b) => a.index - b.index);
+
+                // Use the already computed mergedRacers
+                const allRunners = [];
+                Object.entries(this.mergedRacers).forEach(([name, data]) => {
+                    // Map times to common controls by index
+                    const mappedTimes = commonEntries.map(entry => {
+                        const idx = entry.index;
+                        return (idx >= 0 && idx < data.times.length) ? data.times[idx] : null;
+                    });
+
+                    allRunners.push({
+                        name,
+                        times: mappedTimes
+                    });
+                });
+
+                return {
+                    categoryName: 'Combined',
+                    controls: commonEntries.map(entry => entry.control),
+                    runners: allRunners.filter(runner => runner.times.some(t => t !== null))
+                };
+            }
+
+            updateStats() {
+                let totalRunners = 0;
+                let totalControls = 0;
+
+                Object.values(this.categories).forEach(cat => {
+                    totalRunners += cat.runners.length;
+                    totalControls = Math.max(totalControls, cat.controls.length);
+                });
+
+                document.getElementById('controlCount').textContent = totalControls;
+                document.getElementById('runnerCount').textContent = totalRunners;
+                document.getElementById('categoryCount').textContent = Object.keys(this.categories).length;
+            }
+
+            showError(message) {
+                const container = document.getElementById('errorContainer');
+                container.innerHTML = `<div class="error">⚠️ ${message}</div>`;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const manager = new VisualizationManager();
+            manager.loadData();
+
+            document.getElementById('metricSelect').addEventListener('change', () => {
+                manager.visualizeCategory();
+            });
+        });
+    </script>
+</body>
+
+</html>

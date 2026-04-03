@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Visualizer - Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #252526;
+            padding: 20px;
+            border-radius: 6px;
+        }
+
+        h1 {
+            color: #4ec9b0;
+        }
+
+        h2 {
+            color: #9cdcfe;
+            margin-top: 20px;
+        }
+
+        .debug-info {
+            background: #1e1e1e;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007acc;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+
+        .success {
+            border-left-color: #6a9955;
+        }
+
+        .error {
+            border-left-color: #f48771;
+        }
+
+        .warning {
+            border-left-color: #dcdcaa;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: monospace;
+            padding: 10px;
+            border: 1px solid #3e3e42;
+            margin: 10px 0;
+        }
+
+        button {
+            background: #007acc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background: #005a9e;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Race Visualizer - Debug Version</h1>
+
+        <div>
+            <h2>1. Load HTML File</h2>
+            <input type="file" id="fileInput" accept=".html">
+            <button onclick="loadFile()">Load & Parse</button>
+        </div>
+
+        <div id="debugOutput"></div>
+
+        <div id="visualization" style="display:none;">
+            <h2>2. Visualization</h2>
+            <label>Category:
+                <select id="categorySelect" onchange="updateChart()">
+                    <option>Select a category</option>
+                </select>
+            </label>
+            <label>Metric:
+                <select id="metricSelect" onchange="updateChart()">
+                    <option value="time">Time</option>
+                    <option value="position">Position</option>
+                </select>
+            </label>
+            <div class="chart-container">
+                <canvas id="raceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let parsedData = null;
+        let chartInstance = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('debugOutput');
+            const div = document.createElement('div');
+            div.className = `debug-info ${type}`;
+            div.textContent = `[${type.toUpperCase()}] ${message}`;
+            output.appendChild(div);
+            console.log(`[${type}]`, message);
+        }
+
+        class RaceParser {
+            parseRaceData(htmlContent) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const categories = {};
+
+                // Find all pre elements
+                const preElements = Array.from(doc.querySelectorAll('pre'));
+                log(`Found ${preElements.length} <pre> elements`, 'info');
+
+                preElements.forEach((pre, idx) => {
+                    let categoryName = null;
+                    let prevElement = pre.previousElementSibling;
+
+                    while (prevElement) {
+                        if (prevElement.tagName === 'H3') {
+                            const text = prevElement.textContent.trim();
+                            log(`H3 text for pre #${idx}: "${text}"`, 'info');
+                            const match = text.match(/^([A-Z]{3})/);
+                            if (match) {
+                                categoryName = match[1];
+                                log(`Extracted category: ${categoryName}`, 'success');
+                            }
+                            break;
+                        }
+                        prevElement = prevElement.previousElementSibling;
+                    }
+
+                    if (categoryName) {
+                        const parsed = this.parsePreContent(categoryName, pre.textContent);
+                        if (parsed.runners.length > 0 && parsed.controls.length > 0) {
+                            categories[categoryName] = parsed;
+                            log(`Category ${categoryName}: ${parsed.controls.length} controls, ${parsed.runners.length} runners`, 'success');
+                        } else {
+                            log(`Category ${categoryName}: FAILED - controls: ${parsed.controls.length}, runners: ${parsed.runners.length}`, 'error');
+                        }
+                    }
+                });
+
+                return categories;
+            }
+
+            parsePreContent(categoryName, content) {
+                const lines = content.split('\n');
+                let controls = [];
+                const runners = [];
+                let headerFound = false;
+                let headerIdx = -1;
+
+                // Find header line
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('[') && lines[i].includes('Tulos')) {
+                        controls = this.extractControls(lines[i]);
+                        headerFound = true;
+                        headerIdx = i;
+                        log(`Header at line ${i}: ${controls.length} controls found`, 'success');
+                        break;
+                    }
+                }
+
+                if (!headerFound) {
+                    log(`No header found in category ${categoryName}`, 'error');
+                    return { controls: [], runners: [], categoryName };
+                }
+
+                // Parse riders
+                let runnersFound = 0;
+                for (let i = headerIdx + 1; i < lines.length; i++) {
+                    const line = lines[i];
+
+                    if (!line.match(/^\s+\d+\./)) continue;
+
+                    const trimmed = line.trim();
+
+                    // Skip disqualified
+                    if (trimmed.includes('Hylätty') || trimmed.includes('Keskeytti') || trimmed.endsWith('-')) {
+                        continue;
+                    }
+
+                    if (!trimmed.match(/\d\-(?:\d+\.\d{2}\.\d{2}|\d{1,2}\.\d{2})/)) {
+                        continue;
+                    }
+
+                    const nameMatch = trimmed.match(/^\d+\.\s+(.+?)(\s{2,}|\s+\d\-)/);
+                    if (!nameMatch) continue;
+
+                    const runnerName = nameMatch[1].trim();
+                    const times = this.extractTimes(line, controls.length);
+
+                    // Only include runners with complete split times for all controls
+                    if (times.length === controls.length) {
+                        runners.push({ name: runnerName, times });
+                        runnersFound++;
+                    }
+                }
+
+                log(`Parsed ${runnersFound} valid runners for ${categoryName}`, 'info');
+                return { controls, runners, categoryName };
+            }
+
+            extractControls(line) {
+                const controls = [];
+                const regex = /\[(\d{3})\]/g;
+                let match;
+                while ((match = regex.exec(line)) !== null) {
+                    controls.push(match[1]);
+                }
+                return controls;
+            }
+
+            extractTimes(line, expectedCount) {
+                const times = [];
+                // Match formats: X-MM.SS (minutes.seconds) or X-H.MM.SS (hour.minutes.seconds)
+                const regex = /\d\-(?:(\d+)\.(\d{2})\.(\d{2})|(\d{1,2})\.(\d{2}))/g;
+                let match;
+                let count = 0;
+                while ((match = regex.exec(line)) !== null && count < expectedCount) {
+                    let totalSeconds = 0;
+
+                    if (match[1] !== undefined) {
+                        // H.MM.SS format
+                        const hours = parseInt(match[1], 10);
+                        const minutes = parseInt(match[2], 10);
+                        const seconds = parseInt(match[3], 10);
+                        totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                    } else {
+                        // MM.SS format
+                        const minutes = parseInt(match[4], 10);
+                        const seconds = parseInt(match[5], 10);
+                        totalSeconds = minutes * 60 + seconds;
+                    }
+
+                    times.push(totalSeconds);
+                    count++;
+                }
+                return times;
+            }
+        }
+
+        function loadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                log('No file selected', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                log(`Loading file: ${file.name}`, 'info');
+                const parser = new RaceParser();
+                parsedData = parser.parseRaceData(e.target.result);
+
+                if (Object.keys(parsedData).length === 0) {
+                    log('No valid categories found!', 'error');
+                    return;
+                }
+
+                // Create combined category
+                parsedData['Combined'] = createCombinedCategory(parsedData);
+
+                log(`Successfully parsed ${Object.keys(parsedData).length} categories`, 'success');
+
+                // Populate category select
+                const select = document.getElementById('categorySelect');
+                select.innerHTML = '';
+                Object.keys(parsedData).sort().forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    select.appendChild(option);
+                });
+
+                document.getElementById('visualization').style.display = 'block';
+                updateChart();
+            };
+            reader.readAsText(file);
+        }
+
+        function calculateTimeDifferences(runnerTimes, allRunners) {
+            return runnerTimes.map((time, idx) => {
+                if (time === null || time === undefined) return null;
+                // Find the minimum time at this control
+                let minTime = Infinity;
+                for (const runner of allRunners) {
+                    const otherTime = runner.times[idx];
+                    if (otherTime !== null && otherTime !== undefined && otherTime < minTime) {
+                        minTime = otherTime;
+                    }
+                }
+                return time - minTime;
+            });
+        }
+
+        function createCombinedCategory(categories) {
+            const categoryNames = Object.keys(categories).filter(name => name !== 'Combined');
+            if (categoryNames.length === 0) return null;
+
+            const entryStats = {};
+            categoryNames.forEach(catName => {
+                const cat = categories[catName];
+                cat.controls.forEach((control, idx) => {
+                    const key = `${control}@${idx}`;
+                    if (!entryStats[key]) {
+                        entryStats[key] = { count: 0, control, index: idx };
+                    }
+                    entryStats[key].count += 1;
+                });
+            });
+
+            const expectedCategories = categoryNames.length;
+            const commonEntries = Object.values(entryStats)
+                .filter(entry => entry.count === expectedCategories)
+                .sort((a, b) => a.index - b.index);
+
+            // Collect all runners
+            const allRunners = [];
+            categoryNames.forEach(catName => {
+                categories[catName].runners.forEach(runner => {
+                    allRunners.push({
+                        ...runner,
+                        category: catName // add category info
+                    });
+                });
+            });
+
+            // For each runner, map times to common controls by explicit index
+            const mappedRunners = allRunners.map(runner => {
+                const mappedTimes = commonEntries.map(entry => {
+                    const idx = entry.index;
+                    return (idx >= 0 && idx < runner.times.length) ? runner.times[idx] : null;
+                });
+
+                return {
+                    name: `${runner.name} (${runner.category})`,
+                    times: mappedTimes
+                };
+            });
+
+            return {
+                controls: commonEntries.map(entry => entry.control),
+                runners: mappedRunners.filter(runner => runner.times.some(t => t !== null))
+            };
+        }
+
+        function updateChart() {
+            const categoryName = document.getElementById('categorySelect').value;
+            const metric = document.getElementById('metricSelect').value;
+
+            if (!parsedData[categoryName]) return;
+
+            const category = parsedData[categoryName];
+            const labels = category.controls.map(c => `[${c}]`);
+
+            const datasets = category.runners.map((runner, idx) => {
+                const hue = (idx * 360 / category.runners.length) % 360;
+                const color = `hsl(${hue}, 70%, 50%)`;
+                let data;
+
+                if (metric === 'time') {
+                    data = calculateTimeDifferences(runner.times, category.runners);
+                } else {
+                    data = runner.times.map((time, i) => {
+                        let pos = 1;
+                        for (const r of category.runners) {
+                            if (r.times[i] !== null && r.times[i] !== undefined && r.times[i] < time) pos++;
+                        }
+                        return pos;
+                    });
+                }
+
+                return {
+                    label: runner.name,
+                    data,
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 4
+                };
+            });
+
+            if (chartInstance) chartInstance.destroy();
+
+            const ctx = document.getElementById('raceChart').getContext('2d');
+            const title = metric === 'time' ? `${categoryName} - Time Behind Leader` : `${categoryName} - Position`;
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: title } },
+                    scales: {
+                        y: {
+                            reverse: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
