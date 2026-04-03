@@ -378,7 +378,13 @@
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
                     }
-                    const html = await response.text();
+                    const buffer = await response.arrayBuffer();
+                    let html = new TextDecoder('utf-8').decode(buffer);
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const charset = this.getCharset(doc);
+                    if (charset && charset.toLowerCase() !== 'utf-8') {
+                        html = new TextDecoder('iso-8859-1').decode(buffer);
+                    }
                     this.loadAndParse(html);
                 } catch (err) {
                     console.error('Fetch error:', err);
@@ -619,6 +625,20 @@
                 if (type === 'success' || type === 'error') {
                     setTimeout(() => { container.innerHTML = ''; }, 6000);
                 }
+            }
+
+            getCharset(doc) {
+                const meta = doc.querySelector('meta[http-equiv="Content-Type"]');
+                if (meta) {
+                    const content = meta.getAttribute('content');
+                    if (content) {
+                        const match = content.match(/charset=([^;]+)/i);
+                        if (match) {
+                            return match[1].trim();
+                        }
+                    }
+                }
+                return null;
             }
         }
 

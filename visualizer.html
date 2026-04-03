@@ -332,7 +332,13 @@
                 try {
                     // Fetch the original HTML file
                     const response = await fetch('v260326.html');
-                    const htmlContent = await response.text();
+                    const buffer = await response.arrayBuffer();
+                    let htmlContent = new TextDecoder('utf-8').decode(buffer);
+                    const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
+                    const charset = this.getCharset(doc);
+                    if (charset && charset.toLowerCase() !== 'utf-8') {
+                        htmlContent = new TextDecoder('iso-8859-1').decode(buffer);
+                    }
 
                     this.categories = this.parser.parseRaceData(htmlContent);
 
@@ -539,6 +545,20 @@
                 const container = document.getElementById('messageContainer');
                 container.innerHTML = `<div class="${type}">${msg}</div>`;
                 setTimeout(() => { container.innerHTML = ''; }, 5000);
+            }
+
+            getCharset(doc) {
+                const meta = doc.querySelector('meta[http-equiv="Content-Type"]');
+                if (meta) {
+                    const content = meta.getAttribute('content');
+                    if (content) {
+                        const match = content.match(/charset=([^;]+)/i);
+                        if (match) {
+                            return match[1].trim();
+                        }
+                    }
+                }
+                return null;
             }
         }
 

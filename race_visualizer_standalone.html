@@ -650,6 +650,20 @@
                     setTimeout(() => { container.innerHTML = ''; }, 5000);
                 }
             }
+
+            getCharset(doc) {
+                const meta = doc.querySelector('meta[http-equiv="Content-Type"]');
+                if (meta) {
+                    const content = meta.getAttribute('content');
+                    if (content) {
+                        const match = content.match(/charset=([^;]+)/i);
+                        if (match) {
+                            return match[1].trim();
+                        }
+                    }
+                }
+                return null;
+            }
         }
 
         // Global visualizer instance
@@ -668,13 +682,20 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 if (!visualizer) visualizer = new RaceVisualizer();
-                visualizer.loadAndParse(e.target.result);
+                const buffer = e.target.result;
+                let fileContent = new TextDecoder('utf-8').decode(buffer);
+                const doc = new DOMParser().parseFromString(fileContent, 'text/html');
+                const charset = visualizer.getCharset(doc);
+                if (charset && charset.toLowerCase() !== 'utf-8') {
+                    fileContent = new TextDecoder('iso-8859-1').decode(buffer);
+                }
+                visualizer.loadAndParse(fileContent);
             };
             reader.onerror = () => {
                 if (!visualizer) visualizer = new RaceVisualizer();
                 visualizer.showMessage('Error reading file', 'error');
             };
-            reader.readAsText(file);
+            reader.readAsArrayBuffer(file);
         }
 
         // Initialize on page load
