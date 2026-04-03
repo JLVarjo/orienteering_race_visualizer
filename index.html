@@ -625,6 +625,10 @@
                 document.getElementById('controlCount').textContent = totalControls;
                 document.getElementById('runnerCount').textContent = totalRunners;
                 document.getElementById('categoryCount').textContent = Object.keys(this.categories).length;
+                if ("Combined" in this.categories) {
+                    document.getElementById('runnerCount').textContent = totalRunners / 2;
+                    document.getElementById('categoryCount').textContent = Object.keys(this.categories).length - 1;
+                }
             }
 
             showMessage(msg, type) {
