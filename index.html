@@ -182,17 +182,25 @@
 
 <body>
     <div class="container">
-        <h1>Orienteering Race Visualizer (URL Input)</h1>
-        <div class="subtitle">Enter a URL to the race result HTML file</div>
+        <h1>Orienteering Race Visualizer</h1>
+        <div class="subtitle">Load race data from URL or file</div>
 
         <div class="upload-section">
-            <div class="file-input-wrapper">
+            <div style="margin-bottom: 15px;">
+                <label><input type="radio" name="inputType" value="url" checked> Load from URL</label>
+                <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Load from
+                    File</label>
+            </div>
+            <div id="urlInputSection" class="file-input-wrapper">
                 <input id="urlInput" type="text"
                     placeholder="Enter URL of race HTML file (e.g. http://localhost:8000/v260326.html)">
-                <button onclick="loadUrl()">Load Race Data</button>
             </div>
+            <div id="fileInputSection" class="file-input-wrapper" style="display: none;">
+                <input id="fileInput" type="file" accept=".html">
+            </div>
+            <button onclick="loadData()">Load Race Data</button>
             <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                📡 The file must be served by HTTP(S) and CORS-enabled (or same origin) for browser fetch.
+                📡 For URL: The file must be served by HTTP(S) and CORS-enabled (or same origin) for browser fetch.
             </div>
         </div>
 
@@ -644,14 +652,47 @@
 
         const visualizer = new RaceVisualizer();
 
+        // Add event listeners for input type selection
+        document.querySelectorAll('input[name="inputType"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const isUrl = document.querySelector('input[name="inputType"]:checked').value === 'url';
+                document.getElementById('urlInputSection').style.display = isUrl ? 'flex' : 'none';
+                document.getElementById('fileInputSection').style.display = isUrl ? 'none' : 'flex';
+            });
+        });
+
         function getQueryParam(param) {
             const searchParams = new URLSearchParams(window.location.search);
             return searchParams.get(param);
         }
 
-        function loadUrl() {
-            const url = document.getElementById('urlInput').value.trim();
-            visualizer.loadFromUrl(url);
+        function loadData() {
+            const inputType = document.querySelector('input[name="inputType"]:checked').value;
+            if (inputType === 'url') {
+                const url = document.getElementById('urlInput').value.trim();
+                visualizer.loadFromUrl(url);
+            } else {
+                const file = document.getElementById('fileInput').files[0];
+                if (!file) {
+                    visualizer.showMessage('Please select a file', 'error');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const buffer = e.target.result;
+                    let html = new TextDecoder('utf-8').decode(buffer);
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const charset = visualizer.getCharset(doc);
+                    if (charset && charset.toLowerCase() !== 'utf-8') {
+                        html = new TextDecoder('iso-8859-1').decode(buffer);
+                    }
+                    visualizer.loadAndParse(html);
+                };
+                reader.onerror = () => {
+                    visualizer.showMessage('Error reading file', 'error');
+                };
+                reader.readAsArrayBuffer(file);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
