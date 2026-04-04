@@ -335,6 +335,8 @@
                 const controls = [];
                 let match;
                 while ((match = regex.exec(headerLine)) !== null) {
+                    // before pushing, remove leading zeros for better display
+                    match[1] = match[1].replace(/^0+/, '');
                     controls.push(match[1]);
                 }
                 return controls;
@@ -494,6 +496,42 @@
                 };
             }
 
+            calculateXPositions(category) {
+                const numControls = category.controls.length;
+                if (numControls <= 1) return Array(numControls).fill(0).map((_, i) => i);
+
+                const segmentTimes = Array(numControls - 1).fill().map(() => []);
+
+                // Collect time differences for each segment
+                category.runners.forEach(runner => {
+                    for (let i = 1; i < runner.times.length; i++) {
+                        const time1 = runner.times[i - 1];
+                        const time2 = runner.times[i];
+                        if (time1 !== null && time2 !== null && time1 < time2) {
+                            segmentTimes[i - 1].push(time2 - time1);
+                        }
+                    }
+                });
+
+                // Calculate average for each segment, dropping worst 20%
+                const averages = segmentTimes.map(times => {
+                    if (times.length === 0) return 1; // fallback
+                    times.sort((a, b) => a - b);
+                    const dropCount = Math.floor(times.length * 0.2);
+                    const remaining = times.slice(0, times.length - dropCount);
+                    const sum = remaining.reduce((a, b) => a + b, 0);
+                    return remaining.length > 0 ? sum / remaining.length : 1;
+                });
+
+                // Create cumulative positions
+                const positions = [0];
+                for (let i = 0; i < averages.length; i++) {
+                    positions.push(positions[i] + averages[i]);
+                }
+
+                return positions;
+            }
+
             visualize() {
                 const categoryName = document.getElementById('categorySelect').value;
                 const metric = document.getElementById('metricSelect').value;
@@ -501,13 +539,19 @@
                 if (!categoryName || !this.categories[categoryName]) return;
 
                 const category = this.categories[categoryName];
-                const controlLabels = category.controls.map(c => `[${c}]`);
+                const xPositions = this.calculateXPositions(category);
+                const controlLabels = category.controls.map(c => `${c}`);
 
                 const datasets = category.runners.map((runner, idx) => {
                     const color = this.generateColor(idx, category.runners.length);
-                    const data = metric === 'time'
+                    const yData = metric === 'time'
                         ? this.calculateTimeDifferences(runner.times, category.runners)
                         : this.calculatePositions(runner.times, category.runners);
+
+                    const data = yData.map((y, i) => ({
+                        x: xPositions[i],
+                        y: y
+                    })).filter(point => point.y !== null);
 
                     return {
                         label: runner.name,
@@ -534,7 +578,6 @@
                 this.chart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: controlLabels,
                         datasets
                     },
                     options: {
@@ -565,9 +608,18 @@
                                 beginAtZero: true
                             },
                             x: {
+                                type: 'linear',
                                 title: {
                                     display: true,
-                                    text: 'Control Code'
+                                    text: 'Race Progress (time-based spacing)'
+                                },
+                                afterBuildTicks: function (scale) {
+                                    scale.ticks = xPositions.map((pos, i) => ({ value: pos }));
+                                },
+                                ticks: {
+                                    callback: function (value, index) {
+                                        return (index + 1) + '[' + controlLabels[index] + ']';
+                                    }
                                 }
                             }
                         }
@@ -575,8 +627,8 @@
                 });
 
                 const legendText = metric === 'time'
-                    ? `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's time behind the leader at each control point.<br>The X-axis shows each control point, and the Y-axis shows the time gap in seconds (smaller is better).`
-                    : `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's position at each control point.<br>The X-axis shows each control point, and the Y-axis shows the position (1st = best).`;
+                    ? `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's time behind the leader at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the time gap in seconds (smaller is better).`
+                    : `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's position at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the position (1st = best).`;
                 document.querySelector('.legend-info').innerHTML = legendText;
             }
 
