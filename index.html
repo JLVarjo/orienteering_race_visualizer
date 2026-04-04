@@ -539,6 +539,11 @@
                 if (!categoryName || !this.categories[categoryName]) return;
 
                 const category = this.categories[categoryName];
+                category.runners.sort((a, b) => {
+                    const aTime = a.times[a.times.length - 1] || Infinity;
+                    const bTime = b.times[b.times.length - 1] || Infinity;
+                    return aTime - bTime;
+                });
                 const xPositions = this.calculateXPositions(category);
                 const controlLabels = category.controls.map(c => `${c}`);
 
