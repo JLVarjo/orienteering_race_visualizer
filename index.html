@@ -492,6 +492,7 @@
                 return {
                     categoryName: 'Combined',
                     controls: commonEntries.map(entry => entry.control),
+                    commonEntries: commonEntries,
                     runners: mappedRunners.filter(runner => runner.times.some(t => t !== null))
                 };
             }
@@ -546,6 +547,9 @@
                 });
                 const xPositions = this.calculateXPositions(category);
                 const controlLabels = category.controls.map(c => `${c}`);
+                const originalIndices = category.commonEntries
+                    ? category.commonEntries.map(entry => entry.index)
+                    : category.controls.map((_, i) => i);
 
                 const datasets = category.runners.map((runner, idx) => {
                     const color = this.generateColor(idx, category.runners.length);
@@ -623,7 +627,7 @@
                                 },
                                 ticks: {
                                     callback: function (value, index) {
-                                        return (index + 1) + '[' + controlLabels[index] + ']';
+                                        return (originalIndices[index] + 1) + '[' + controlLabels[index] + ']';
                                     },
                                     maxRotation: 90,
                                     minRotation: 45
