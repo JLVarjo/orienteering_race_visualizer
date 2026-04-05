@@ -185,7 +185,7 @@
         <h1>Orienteering Race Visualizer</h1>
         <div class="subtitle">Load race data from URL or file</div>
 
-        <div class="upload-section">
+        <div id="uploadSection" class="upload-section">
             <div id="inputTypeSelector" style="margin-bottom: 15px;">
                 <label><input type="radio" name="inputType" value="url" checked> Load from URL</label>
                 <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Load from
@@ -822,12 +822,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const fileUrl = getQueryParam('file') || getQueryParam('url');
+            const fileParam = getQueryParam('file');
+            const urlParam = getQueryParam('url');
+            const fileUrl = fileParam || urlParam;
             if (fileUrl) {
                 document.querySelector('input[name="inputType"][value="url"]').checked = true;
-                document.getElementById('inputTypeSelector').style.display = 'none';
-                document.getElementById('urlInputSection').style.display = 'flex';
-                document.getElementById('fileInputSection').style.display = 'none';
+                if (fileParam) {
+                    document.getElementById('uploadSection').style.display = 'none';
+                } else {
+                    document.getElementById('inputTypeSelector').style.display = 'none';
+                    document.getElementById('urlInputSection').style.display = 'flex';
+                    document.getElementById('fileInputSection').style.display = 'none';
+                }
                 document.getElementById('urlInput').value = fileUrl;
                 visualizer.loadFromUrl(fileUrl);
             }
