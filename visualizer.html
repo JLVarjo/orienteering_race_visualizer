@@ -215,6 +215,7 @@
                 <label for="metricSelect">Metric:</label>
                 <select id="metricSelect">
                     <option value="time">Time Behind Leader</option>
+                    <option value="cumulative">Time</option>
                     <option value="position">Position</option>
                 </select>
             </div>
@@ -574,7 +575,9 @@
                     const color = this.generateColor(idx, category.runners.length);
                     const yData = metric === 'time'
                         ? this.calculateTimeDifferences(runner.times, selectedRunners)
-                        : this.calculatePositions(runner.times, selectedRunners);
+                        : metric === 'cumulative'
+                            ? this.calculateCumulativeTimes(runner.times)
+                            : this.calculatePositions(runner.times, selectedRunners);
                     const isSelected = this.selectedRunners.has(runner.name);
 
                     const data = yData.map((y, i) => ({
@@ -600,10 +603,16 @@
                 if (this.chart) this.chart.destroy();
 
                 const ctx = document.getElementById('raceChart').getContext('2d');
-                const yAxisLabel = metric === 'time' ? 'Time behind leader (seconds)' : 'Position (1st = best)';
+                const yAxisLabel = metric === 'time'
+                    ? 'Time behind leader (seconds)'
+                    : metric === 'cumulative'
+                        ? 'Cumulative time (seconds)'
+                        : 'Position (1st = best)';
                 const title = metric === 'time'
                     ? `${categoryName} - Time Behind Leader at Each Control (${selectedRunners.length} runners)`
-                    : `${categoryName} - Runner Position at Each Control (${selectedRunners.length} runners)`;
+                    : metric === 'cumulative'
+                        ? `${categoryName} - Cumulative Time at Each Control (${selectedRunners.length} runners)`
+                        : `${categoryName} - Runner Position at Each Control (${selectedRunners.length} runners)`;
 
                 this.chart = new Chart(ctx, {
                     type: 'line',
@@ -684,9 +693,14 @@
                     }
                 });
 
-                const legendText = metric === 'time'
-                    ? `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's time behind the leader at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the time gap in seconds (smaller is better).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners and recalculate the leader among selected runners.`
-                    : `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's position at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the position (1st = best).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners and recalculate positions among selected runners.`;
+                let legendText;
+                if (metric === 'time') {
+                    legendText = `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's time behind the leader at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the time gap in seconds (smaller is better).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners and recalculate the leader among selected runners.`;
+                } else if (metric === 'cumulative') {
+                    legendText = `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's cumulative elapsed time from race start at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows total elapsed time in seconds (smaller is better).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners for a cleaner comparison.`;
+                } else {
+                    legendText = `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's position at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the position (1st = best).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners and recalculate positions among selected runners.`;
+                }
                 document.querySelector('.legend-info').innerHTML = legendText;
                 this.updateStats();
             }
@@ -717,6 +731,10 @@
                     }
                     return time - minTime;
                 });
+            }
+
+            calculateCumulativeTimes(runnerTimes) {
+                return runnerTimes.map(time => (time === null || time === undefined ? null : time));
             }
 
             generateColor(index, total) {
