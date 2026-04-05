@@ -620,6 +620,12 @@
                                 text: title,
                                 font: { size: 14, weight: 'bold' }
                             },
+                            tooltip: {
+                                callbacks: {
+                                    // Hide tooltip title (x position line).
+                                    title: () => ''
+                                }
+                            },
                             legend: {
                                 display: true,
                                 position: 'right',
