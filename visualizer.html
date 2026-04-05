@@ -565,7 +565,7 @@
                     return aTime - bTime;
                 });
 
-                const xPositions = this.calculateXPositions(category.controls, selectedRunners);
+                const xPositions = this.calculateXPositions(category.controls, category.runners);
                 const controlLabels = category.controls.map(c => `${c}`);
                 const originalIndices = category.commonEntries
                     ? category.commonEntries.map(entry => entry.index)
