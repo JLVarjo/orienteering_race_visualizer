@@ -494,6 +494,12 @@
                     };
                 });
 
+                mappedRunners.sort((a, b) => {
+                    const aTime = a.times[a.times.length - 1] ?? Infinity;
+                    const bTime = b.times[b.times.length - 1] ?? Infinity;
+                    return aTime - bTime;
+                });
+
                 return {
                     categoryName: '-All Forkings',
                     controls: commonEntries.map(entry => entry.control),
