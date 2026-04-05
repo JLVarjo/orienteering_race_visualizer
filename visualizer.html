@@ -414,7 +414,7 @@
                         return false;
                     }
 
-                    this.categories['Combined'] = this.createCombinedCategory(this.categories);
+                    this.categories['-All Forkings'] = this.createCombinedCategory(this.categories);
 
                     this.initializeUI();
                     this.showMessage(`Successfully loaded ${categoryCount} categories with ${totalRunners} runners`, 'success');
@@ -451,7 +451,7 @@
             }
 
             createCombinedCategory(categories) {
-                const categoryNames = Object.keys(categories).filter(name => name !== 'Combined');
+                const categoryNames = Object.keys(categories).filter(name => name !== '-All Forkings');
                 if (categoryNames.length === 0) return null;
 
                 const entryStats = {};
@@ -490,7 +490,7 @@
                 });
 
                 return {
-                    categoryName: 'Combined',
+                    categoryName: '-All Forkings',
                     controls: commonEntries.map(entry => entry.control),
                     commonEntries: commonEntries,
                     runners: mappedRunners.filter(runner => runner.times.some(t => t !== null))
@@ -620,7 +620,7 @@
                                 type: 'linear',
                                 title: {
                                     display: true,
-                                    text: 'Race Progress (time-based spacing)'
+                                    text: 'Race Progress (control number/code)'
                                 },
                                 afterBuildTicks: function (scale) {
                                     scale.ticks = xPositions.map((pos, i) => ({ value: pos }));
@@ -688,7 +688,7 @@
                 document.getElementById('controlCount').textContent = totalControls;
                 document.getElementById('runnerCount').textContent = totalRunners;
                 document.getElementById('categoryCount').textContent = Object.keys(this.categories).length;
-                if ("Combined" in this.categories) {
+                if ("-All Forkings" in this.categories) {
                     document.getElementById('runnerCount').textContent = totalRunners / 2;
                     document.getElementById('categoryCount').textContent = Object.keys(this.categories).length - 1;
                 }
