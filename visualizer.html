@@ -371,6 +371,7 @@
                 this.chart = null;
                 this.categories = {};
                 this.parser = new RaceParser();
+                this.shuffledHues = null;
 
                 document.getElementById('categorySelect').addEventListener('change', () => this.visualize());
                 document.getElementById('metricSelect').addEventListener('change', () => this.visualize());
@@ -551,6 +552,9 @@
                     ? category.commonEntries.map(entry => entry.index)
                     : category.controls.map((_, i) => i);
 
+                // Reset shuffled hues for randomization on each render
+                this.shuffledHues = null;
+
                 const datasets = category.runners.map((runner, idx) => {
                     const color = this.generateColor(idx, category.runners.length);
                     const yData = metric === 'time'
@@ -672,7 +676,16 @@
             }
 
             generateColor(index, total) {
-                const hue = (index * 360 / total) % 360;
+                // Create a shuffled array of hues for randomization
+                if (!this.shuffledHues || this.shuffledHues.length !== total) {
+                    this.shuffledHues = Array.from({ length: total }, (_, i) => (i * 360 / total) % 360);
+                    // Fisher-Yates shuffle
+                    for (let i = this.shuffledHues.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [this.shuffledHues[i], this.shuffledHues[j]] = [this.shuffledHues[j], this.shuffledHues[i]];
+                    }
+                }
+                const hue = this.shuffledHues[index];
                 return `hsl(${hue}, 70%, 50%)`;
             }
 
