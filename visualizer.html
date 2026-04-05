@@ -371,6 +371,7 @@
                 this.categories = {};
                 this.parser = new RaceParser();
                 this.selectedRunners = new Set();
+                this.shuffledHues = [];
 
                 document.getElementById('categorySelect').addEventListener('change', () => {
                     this.selectedRunners.clear();
@@ -418,6 +419,7 @@
                     }
 
                     this.categories['-All Forkings'] = this.createCombinedCategory(this.categories);
+                    this.resetColorShuffle();
 
                     this.initializeUI();
                     this.showMessage(`Successfully loaded ${categoryCount} categories with ${totalRunners} runners`, 'success');
@@ -563,8 +565,6 @@
                     ? category.commonEntries.map(entry => entry.index)
                     : category.controls.map((_, i) => i);
 
-                this.shuffledHues = null;
-
                 const datasets = category.runners.map((runner, idx) => {
                     const color = this.generateColor(idx, category.runners.length);
                     const yData = metric === 'time'
@@ -709,15 +709,19 @@
             }
 
             generateColor(index, total) {
-                if (!this.shuffledHues || this.shuffledHues.length !== total) {
-                    this.shuffledHues = Array.from({ length: total }, (_, i) => (i * 360 / total) % 360);
-                    for (let i = this.shuffledHues.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [this.shuffledHues[i], this.shuffledHues[j]] = [this.shuffledHues[j], this.shuffledHues[i]];
-                    }
+                if (!this.shuffledHues || this.shuffledHues.length === 0) {
+                    this.resetColorShuffle();
                 }
-                const hue = this.shuffledHues[index];
+                const hue = this.shuffledHues[index % this.shuffledHues.length];
                 return `hsl(${hue}, 70%, 50%)`;
+            }
+
+            resetColorShuffle() {
+                this.shuffledHues = Array.from({ length: 360 }, (_, i) => i);
+                for (let i = this.shuffledHues.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.shuffledHues[i], this.shuffledHues[j]] = [this.shuffledHues[j], this.shuffledHues[i]];
+                }
             }
 
             updateStats() {
