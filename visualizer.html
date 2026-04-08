@@ -207,7 +207,7 @@
 
         <div id="visualizationSection" class="hidden">
             <div class="controls">
-                <label for="categorySelect">Race Category:</label>
+                <label for="categorySelect">Course/Forking:</label>
                 <select id="categorySelect" disabled>
                     <option value="">Select category...</option>
                 </select>
@@ -234,7 +234,7 @@
                     <div class="stat-value" id="runnerCount">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Race Categories / Forkings</div>
+                    <div class="stat-label">Courses / Forkings</div>
                     <div class="stat-value" id="categoryCount">-</div>
                 </div>
             </div>
@@ -248,7 +248,7 @@
     </div>
 
     <script>
-        class RaceParser {
+        class RaceParser_EResults {
             parseRaceData(htmlContent) {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlContent, 'text/html');
@@ -369,7 +369,7 @@
             constructor() {
                 this.chart = null;
                 this.categories = {};
-                this.parser = new RaceParser();
+                this.parser = new RaceParser_EResults();
                 this.selectedRunners = new Set();
                 this.shuffledHues = [];
 
@@ -414,7 +414,7 @@
                     Object.values(this.categories).forEach(cat => totalRunners += cat.runners.length);
 
                     if (categoryCount === 0) {
-                        this.showMessage('No valid race categories found in file', 'error');
+                        this.showMessage('No valid race courses found in file', 'error');
                         return false;
                     }
 
@@ -422,7 +422,7 @@
                     this.resetColorShuffle();
 
                     this.initializeUI();
-                    this.showMessage(`Successfully loaded ${categoryCount} categories with ${totalRunners} runners`, 'success');
+                    this.showMessage(`Successfully loaded ${categoryCount} courses with ${totalRunners} runners`, 'success');
                     return true;
                 } catch (err) {
                     console.error('Parse error:', err);
