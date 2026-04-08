@@ -282,6 +282,7 @@
                     if (categoryName) {
                         const parsed = this.parsePreContent(categoryName, pre.textContent);
                         if (parsed.runners.length > 0 && parsed.controls.length > 0) {
+                            parsed.groupKey = 'all';
                             categories[categoryName] = parsed;
                         }
                     }
@@ -336,7 +337,12 @@
 
                     if (runners.length > 0) {
                         const uniqueName = this.makeUniqueCategoryName(categoryName, categories);
-                        categories[uniqueName] = { controls, runners, categoryName: uniqueName };
+                        categories[uniqueName] = {
+                            controls,
+                            runners,
+                            categoryName: uniqueName,
+                            groupKey: startLabel || 'all'
+                        };
                     }
                 });
 
@@ -535,7 +541,8 @@
                         return false;
                     }
 
-                    this.categories['-All Forkings'] = this.createCombinedCategory(this.categories);
+                    const combinedCategories = this.createCombinedCategories(this.categories);
+                    this.categories = { ...this.categories, ...combinedCategories };
                     this.resetColorShuffle();
 
                     this.initializeUI();
@@ -573,7 +580,7 @@
             }
 
             createCombinedCategory(categories) {
-                const categoryNames = Object.keys(categories).filter(name => name !== '-All Forkings');
+                const categoryNames = Object.keys(categories).filter(name => !name.startsWith('-All Forkings'));
                 if (categoryNames.length === 0) return null;
 
                 const entryStats = {};
@@ -623,6 +630,38 @@
                     commonEntries: commonEntries,
                     runners: mappedRunners.filter(runner => runner.times.some(t => t !== null))
                 };
+            }
+
+            createCombinedCategories(categories) {
+                const sourceEntries = Object.entries(categories).filter(([name]) => !name.startsWith('-All Forkings'));
+                if (sourceEntries.length === 0) return {};
+
+                const groups = new Map();
+                sourceEntries.forEach(([name, category]) => {
+                    const key = category.groupKey || 'all';
+                    if (!groups.has(key)) {
+                        groups.set(key, {});
+                    }
+                    groups.get(key)[name] = category;
+                });
+
+                const combined = {};
+                const hasMultipleGroups = groups.size > 1;
+
+                groups.forEach((groupCategories, key) => {
+                    const merged = this.createCombinedCategory(groupCategories);
+                    if (!merged) return;
+
+                    const combinedName = hasMultipleGroups
+                        ? `-All Forkings (${key})`
+                        : '-All Forkings';
+
+                    merged.categoryName = combinedName;
+                    merged.groupKey = key;
+                    combined[combinedName] = merged;
+                });
+
+                return combined;
             }
 
             calculateXPositions(controls, runners) {
@@ -873,19 +912,18 @@
             updateStats() {
                 let totalControls = 0;
                 let totalRunners = 0;
+                const baseCategories = Object.entries(this.categories)
+                    .filter(([name]) => !name.startsWith('-All Forkings'))
+                    .map(([, cat]) => cat);
 
-                Object.values(this.categories).forEach(cat => {
+                baseCategories.forEach(cat => {
                     totalControls = Math.max(totalControls, cat.controls.length);
                     totalRunners += cat.runners.length;
                 });
 
                 document.getElementById('controlCount').textContent = totalControls;
                 document.getElementById('runnerCount').textContent = totalRunners;
-                document.getElementById('categoryCount').textContent = Object.keys(this.categories).length;
-                if ("-All Forkings" in this.categories) {
-                    document.getElementById('runnerCount').textContent = totalRunners / 2;
-                    document.getElementById('categoryCount').textContent = Object.keys(this.categories).length - 1;
-                }
+                document.getElementById('categoryCount').textContent = baseCategories.length;
             }
 
             showMessage(msg, type) {
