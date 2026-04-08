@@ -248,10 +248,17 @@
     </div>
 
     <script>
-        class RaceParser_EResults {
+        class RaceParser {
             parseRaceData(htmlContent) {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlContent, 'text/html');
+
+                // Tuloskasa format uses table-based class blocks.
+                const tuloskasaCategories = this.parseTuloskasaData(doc);
+                if (Object.keys(tuloskasaCategories).length > 0) {
+                    return tuloskasaCategories;
+                }
+
                 const categories = {};
 
                 const preElements = Array.from(doc.querySelectorAll('pre'));
@@ -281,6 +288,116 @@
                 });
 
                 return categories;
+            }
+
+            parseTuloskasaData(doc) {
+                const categories = {};
+                const classBlocks = Array.from(doc.querySelectorAll('section.class-block'));
+
+                classBlocks.forEach((block) => {
+                    const h3 = block.querySelector('h3');
+                    if (!h3) return;
+
+                    const headingText = h3.textContent.trim();
+                    const categoryMatch = headingText.match(/^([A-Z]{3})\b/);
+                    if (!categoryMatch) return;
+
+                    const categoryCode = categoryMatch[1];
+                    const startBlock = block.closest('section.start-block');
+                    const startHeading = startBlock ? startBlock.querySelector('h2.start-heading') : null;
+                    const startLabel = startHeading ? startHeading.textContent.trim() : '';
+                    const categoryName = startLabel ? `${categoryCode} (${startLabel})` : categoryCode;
+
+                    const controls = Array.from(block.querySelectorAll('th.ctrl small.ctrl-code'))
+                        .map(el => el.textContent.trim().replace(/^0+/, ''))
+                        .filter(Boolean);
+
+                    if (controls.length === 0) return;
+
+                    const runners = [];
+                    const rows = Array.from(block.querySelectorAll('tbody tr'));
+
+                    rows.forEach((row) => {
+                        const nameCell = row.querySelector('td.name');
+                        const resultCell = row.querySelector('td.time');
+                        if (!nameCell || !resultCell) return;
+
+                        const runnerName = nameCell.textContent.trim();
+                        const resultText = resultCell.textContent.trim();
+                        if (!runnerName || !resultText) return;
+
+                        if (/DSQ|HYL|HYLÄ|KESKEY|DNF|DNS/i.test(resultText)) return;
+
+                        const times = this.extractTimesFromTuloskasaRow(row, controls.length);
+                        if (times.length === controls.length) {
+                            runners.push({ name: runnerName, times });
+                        }
+                    });
+
+                    if (runners.length > 0) {
+                        const uniqueName = this.makeUniqueCategoryName(categoryName, categories);
+                        categories[uniqueName] = { controls, runners, categoryName: uniqueName };
+                    }
+                });
+
+                return categories;
+            }
+
+            makeUniqueCategoryName(baseName, categories) {
+                if (!categories[baseName]) return baseName;
+                let counter = 2;
+                while (categories[`${baseName} (${counter})`]) {
+                    counter++;
+                }
+                return `${baseName} (${counter})`;
+            }
+
+            extractTimesFromTuloskasaRow(row, expectedCount) {
+                const controlCells = Array.from(row.querySelectorAll('td.ctrl'));
+                if (controlCells.length < expectedCount) {
+                    return [];
+                }
+
+                const times = [];
+                for (let i = 0; i < expectedCount; i++) {
+                    const cell = controlCells[i];
+                    const offsetText = (cell.querySelector('.offset')?.textContent || '').trim();
+                    const fallbackText = cell.textContent.trim();
+                    const candidate = offsetText || fallbackText;
+                    const seconds = this.parseClockTimeToSeconds(candidate);
+
+                    if (seconds === null) {
+                        return [];
+                    }
+                    times.push(seconds);
+                }
+
+                return times;
+            }
+
+            parseClockTimeToSeconds(timeText) {
+                const normalized = timeText.replace(/\s+/g, '');
+                if (!normalized || normalized === '-' || normalized === '–') {
+                    return null;
+                }
+
+                const parts = normalized.split(':');
+                if (parts.length === 2) {
+                    const minutes = parseInt(parts[0], 10);
+                    const seconds = parseInt(parts[1], 10);
+                    if (Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
+                    return minutes * 60 + seconds;
+                }
+
+                if (parts.length === 3) {
+                    const hours = parseInt(parts[0], 10);
+                    const minutes = parseInt(parts[1], 10);
+                    const seconds = parseInt(parts[2], 10);
+                    if (Number.isNaN(hours) || Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
+                    return hours * 3600 + minutes * 60 + seconds;
+                }
+
+                return null;
             }
 
             parsePreContent(categoryName, content) {
@@ -369,7 +486,7 @@
             constructor() {
                 this.chart = null;
                 this.categories = {};
-                this.parser = new RaceParser_EResults();
+                this.parser = new RaceParser();
                 this.selectedRunners = new Set();
                 this.shuffledHues = [];
 
