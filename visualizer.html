@@ -306,8 +306,9 @@
                     const categoryCode = categoryMatch[1];
                     const startBlock = block.closest('section.start-block');
                     const startHeading = startBlock ? startBlock.querySelector('h2.start-heading') : null;
-                    const startLabel = startHeading ? startHeading.textContent.trim() : '';
-                    const categoryName = startLabel ? `${categoryCode} (${startLabel})` : categoryCode;
+                    const courseName = startHeading ? startHeading.textContent.trim() : '';
+                    const forkingName = categoryCode;
+                    const categoryName = courseName ? `${courseName} - ${forkingName}` : forkingName;
 
                     const controls = Array.from(block.querySelectorAll('th.ctrl small.ctrl-code'))
                         .map(el => el.textContent.trim().replace(/^0+/, ''))
@@ -341,7 +342,7 @@
                             controls,
                             runners,
                             categoryName: uniqueName,
-                            groupKey: startLabel || 'all'
+                            groupKey: courseName || 'all'
                         };
                     }
                 });
@@ -653,8 +654,8 @@
                     if (!merged) return;
 
                     const combinedName = hasMultipleGroups
-                        ? `(${key}) - All Forkings `
-                        : '- All Forkings';
+                        ? `${key}  All Forkings `
+                        : ' All Forkings';
 
                     merged.categoryName = combinedName;
                     merged.groupKey = key;
