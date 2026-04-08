@@ -336,7 +336,7 @@
                         if (/DSQ|HYL|HYLÄ|KESKEY|DNF|DNS/i.test(resultText)) return;
 
                         const times = this.extractTimesFromTuloskasaRow(row, controls.length);
-                        if (times.length === controls.length) {
+                        if (times.length === controls.length && times.some(t => t !== null)) {
                             runners.push({ name: runnerName, times });
                         }
                     });
@@ -373,17 +373,32 @@
                 }
 
                 const times = [];
+                let lastCumulative = null;
                 for (let i = 0; i < expectedCount; i++) {
                     const cell = controlCells[i];
                     const offsetText = (cell.querySelector('.offset')?.textContent || '').trim();
-                    const fallbackText = cell.textContent.trim();
-                    const candidate = offsetText || fallbackText;
-                    const seconds = this.parseClockTimeToSeconds(candidate);
+                    const splitText = (cell.querySelector('.split')?.textContent || '').trim();
 
-                    if (seconds === null) {
-                        return [];
+                    const offsetSeconds = this.parseClockTimeToSeconds(offsetText);
+                    if (offsetSeconds !== null) {
+                        // Prefer the authoritative cumulative offset time
+                        times.push(offsetSeconds);
+                        lastCumulative = offsetSeconds;
+                    } else {
+                        // Offset missing — try to reconstruct from split + last known cumulative.
+                        // In tuloskasa, splits after a missed punch are measured from the last
+                        // punched control, so accumulating from lastCumulative is correct.
+                        const splitSeconds = this.parseClockTimeToSeconds(splitText);
+                        if (splitSeconds !== null && lastCumulative !== null) {
+                            const reconstructed = lastCumulative + splitSeconds;
+                            times.push(reconstructed);
+                            lastCumulative = reconstructed;
+                        } else {
+                            // Missed punch (–) or no prior reference — leave as null gap
+                            times.push(null);
+                            // Do NOT update lastCumulative: next split is still from last valid punch
+                        }
                     }
-                    times.push(seconds);
                 }
 
                 return times;
