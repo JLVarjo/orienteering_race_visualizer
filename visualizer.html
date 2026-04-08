@@ -283,6 +283,8 @@
                         const parsed = this.parsePreContent(categoryName, pre.textContent);
                         if (parsed.runners.length > 0 && parsed.controls.length > 0) {
                             parsed.groupKey = 'all';
+                            parsed.courseName = 'all';
+                            parsed.forkingName = categoryName;
                             categories[categoryName] = parsed;
                         }
                     }
@@ -342,7 +344,9 @@
                             controls,
                             runners,
                             categoryName: uniqueName,
-                            groupKey: courseName || 'all'
+                            groupKey: courseName || 'all',
+                            courseName: courseName || 'all',
+                            forkingName: forkingName
                         };
                     }
                 });
@@ -916,15 +920,26 @@
                 const baseCategories = Object.entries(this.categories)
                     .filter(([name]) => !name.includes('All Forkings'))
                     .map(([, cat]) => cat);
+                const courseNames = new Set();
+                const forkingNames = new Set();
 
                 baseCategories.forEach(cat => {
                     totalControls = Math.max(totalControls, cat.controls.length);
                     totalRunners += cat.runners.length;
+
+                    const courseName = cat.courseName || cat.groupKey || 'all';
+                    const fallbackForking = cat.categoryName && cat.categoryName.includes(' - ')
+                        ? cat.categoryName.split(' - ').slice(1).join(' - ').trim()
+                        : cat.categoryName;
+                    const forkingName = cat.forkingName || fallbackForking || '';
+
+                    if (courseName) courseNames.add(courseName);
+                    if (forkingName) forkingNames.add(forkingName);
                 });
 
                 document.getElementById('controlCount').textContent = totalControls;
                 document.getElementById('runnerCount').textContent = totalRunners;
-                document.getElementById('categoryCount').textContent = baseCategories.length;
+                document.getElementById('categoryCount').textContent = `${courseNames.size} / ${forkingNames.size}`;
             }
 
             showMessage(msg, type) {
