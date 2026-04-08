@@ -615,8 +615,19 @@
             initializeUI() {
                 document.getElementById('visualizationSection').classList.remove('hidden');
                 this.populateCategories();
+                this.selectInitialRunners();
                 this.updateStats();
                 this.visualize();
+            }
+
+            selectInitialRunners() {
+                const categoryName = document.getElementById('categorySelect').value;
+                this.allowEmptySelection = false;
+                this.selectedRunners.clear();
+
+                if (!categoryName || !this.categories[categoryName]) return;
+
+                this.categories[categoryName].runners.forEach(runner => this.selectedRunners.add(runner.name));
             }
 
             populateCategories() {
