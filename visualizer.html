@@ -297,49 +297,73 @@
             }
 
             parseTuloskasaData(doc) {
+                const forkBlocks = Array.from(doc.querySelectorAll('section.fork-block'));
+                if (forkBlocks.length > 0) {
+                    return this.parseTuloskasaForkBlocks(doc, forkBlocks);
+                }
+
+                return this.parseTuloskasaClassBlocks(doc);
+            }
+
+            parseTuloskasaForkBlocks(doc, forkBlocks = null) {
+                const categories = {};
+                const blocks = forkBlocks || Array.from(doc.querySelectorAll('section.fork-block'));
+
+                blocks.forEach((block) => {
+                    const heading = block.querySelector('h3.fork-heading, h3, h2');
+                    if (!heading) return;
+
+                    const forkingName = heading.textContent.trim();
+                    if (!forkingName) return;
+
+                    const courseName = this.resolveForkBlockCourseName(block, forkingName);
+                    const categoryName = courseName ? `${courseName} - ${forkingName}` : forkingName;
+
+                    const controls = this.extractTuloskasaControls(block);
+                    if (controls.length === 0) return;
+
+                    const runners = this.extractTuloskasaRunners(block, controls.length);
+                    if (runners.length > 0) {
+                        const uniqueName = this.makeUniqueCategoryName(categoryName, categories);
+                        categories[uniqueName] = {
+                            controls,
+                            runners,
+                            categoryName: uniqueName,
+                            groupKey: courseName || 'all',
+                            courseName: courseName || 'all',
+                            forkingName
+                        };
+                    }
+                });
+
+                return categories;
+            }
+
+            parseTuloskasaClassBlocks(doc) {
                 const categories = {};
                 const classBlocks = Array.from(doc.querySelectorAll('section.class-block'));
 
                 classBlocks.forEach((block) => {
-                    const h3 = block.querySelector('h3');
-                    if (!h3) return;
+                    const heading = block.querySelector('h3, h2');
+                    if (!heading) return;
 
-                    const headingText = h3.textContent.trim();
-                    const categoryMatch = headingText.match(/^([A-Z]{3})\b/);
-                    if (!categoryMatch) return;
+                    const headingText = heading.textContent.trim();
+                    if (!headingText) return;
 
-                    const categoryCode = categoryMatch[1];
                     const startBlock = block.closest('section.start-block');
                     const startHeading = startBlock ? startBlock.querySelector('h2.start-heading') : null;
                     const courseName = startHeading ? startHeading.textContent.trim() : '';
-                    const forkingName = categoryCode;
-                    const categoryName = courseName ? `${courseName} - ${forkingName}` : forkingName;
+                    const categoryMatch = headingText.match(/^([A-Z]{3})\b/);
+                    const forkingName = categoryMatch ? categoryMatch[1] : headingText;
+                    const categoryName = courseName && courseName !== forkingName
+                        ? `${courseName} - ${forkingName}`
+                        : forkingName;
 
-                    const controls = Array.from(block.querySelectorAll('th.ctrl small.ctrl-code'))
-                        .map(el => el.textContent.trim().replace(/^0+/, ''))
-                        .filter(Boolean);
+                    const controls = this.extractTuloskasaControls(block);
 
                     if (controls.length === 0) return;
 
-                    const runners = [];
-                    const rows = Array.from(block.querySelectorAll('tbody tr'));
-
-                    rows.forEach((row) => {
-                        const nameCell = row.querySelector('td.name');
-                        const resultCell = row.querySelector('td.time');
-                        if (!nameCell || !resultCell) return;
-
-                        const runnerName = nameCell.textContent.trim();
-                        const resultText = resultCell.textContent.trim();
-                        if (!runnerName || !resultText) return;
-
-                        if (/DSQ|HYL|HYLÄ|KESKEY|DNF|DNS/i.test(resultText)) return;
-
-                        const times = this.extractTimesFromTuloskasaRow(row, controls.length);
-                        if (times.length === controls.length && times.some(t => t !== null)) {
-                            runners.push({ name: runnerName, times });
-                        }
-                    });
+                    const runners = this.extractTuloskasaRunners(block, controls.length);
 
                     if (runners.length > 0) {
                         const uniqueName = this.makeUniqueCategoryName(categoryName, categories);
@@ -355,6 +379,65 @@
                 });
 
                 return categories;
+            }
+
+            resolveForkBlockCourseName(block, forkingName) {
+                const forksContainer = block.closest('.forks-container');
+                if (forksContainer) {
+                    let sibling = forksContainer.previousElementSibling;
+                    while (sibling) {
+                        if (sibling.matches('section.class-block')) {
+                            const classHeading = sibling.querySelector('h2, h3');
+                            const headingText = classHeading ? classHeading.textContent.trim() : '';
+                            if (headingText) return headingText;
+                        }
+                        sibling = sibling.previousElementSibling;
+                    }
+                }
+
+                if (/\brata\b/i.test(forkingName)) {
+                    return forkingName;
+                }
+
+                return '';
+            }
+
+            extractTuloskasaControls(block) {
+                return Array.from(block.querySelectorAll('th.ctrl'))
+                    .map((cell) => {
+                        const smallCode = cell.querySelector('small.ctrl-code');
+                        const rawText = (smallCode ? smallCode.textContent : cell.textContent).trim();
+                        if (!rawText) return null;
+                        if (/^\d+$/.test(rawText)) {
+                            return rawText.replace(/^0+/, '') || '0';
+                        }
+                        return rawText;
+                    })
+                    .filter(Boolean);
+            }
+
+            extractTuloskasaRunners(block, expectedControlCount) {
+                const runners = [];
+                const rows = Array.from(block.querySelectorAll('tbody tr'));
+
+                rows.forEach((row) => {
+                    const nameCell = row.querySelector('td.name');
+                    const resultCell = row.querySelector('td.time');
+                    if (!nameCell || !resultCell) return;
+
+                    const runnerName = nameCell.textContent.trim();
+                    const resultText = resultCell.textContent.trim();
+                    if (!runnerName || !resultText) return;
+
+                    if (/DSQ|HYL|HYLÄ|KESKEY|DNF|DNS/i.test(resultText)) return;
+
+                    const times = this.extractTimesFromTuloskasaRow(row, expectedControlCount);
+                    if (times.length === expectedControlCount && times.some(t => t !== null)) {
+                        runners.push({ name: runnerName, times });
+                    }
+                });
+
+                return runners;
             }
 
             makeUniqueCategoryName(baseName, categories) {
