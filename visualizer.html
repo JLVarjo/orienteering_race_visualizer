@@ -700,7 +700,7 @@
                 return positions;
             }
 
-            visualize() {
+            visualize(skipAnimation = false) {
                 const categoryName = document.getElementById('categorySelect').value;
                 const metric = document.getElementById('metricSelect').value;
 
@@ -781,6 +781,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: skipAnimation ? false : undefined,
                         plugins: {
                             title: {
                                 display: true,
@@ -803,7 +804,7 @@
                                     } else {
                                         this.selectedRunners.add(runnerName);
                                     }
-                                    this.visualize();
+                                    this.visualize(true);
                                 },
                                 labels: {
                                     padding: 15,
