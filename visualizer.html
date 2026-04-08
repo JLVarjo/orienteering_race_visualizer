@@ -670,8 +670,10 @@
 
                 const allRunners = [];
                 categoryNames.forEach(catName => {
-                    categories[catName].runners.forEach(runner => {
-                        allRunners.push({ ...runner, category: catName });
+                    const category = categories[catName];
+                    const runnerCategoryLabel = category.forkingName || catName;
+                    category.runners.forEach(runner => {
+                        allRunners.push({ ...runner, category: runnerCategoryLabel });
                     });
                 });
 
