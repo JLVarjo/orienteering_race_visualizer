@@ -182,7 +182,7 @@
 
 <body>
     <div class="container">
-        <h1>Orienteering Race Visualizer</h1>
+        <h1 id="pageTitle">Orienteering Race Visualizer</h1>
 
         <div id="uploadSection" class="upload-section">
             <div id="inputTypeSelector" style="margin-bottom: 15px;">
@@ -518,6 +518,8 @@
                 this.parser = new RaceParser();
                 this.selectedRunners = new Set();
                 this.allowEmptySelection = false;
+                this.defaultPageTitle = document.title;
+                this.defaultHeaderTitle = document.getElementById('pageTitle').textContent;
 
                 document.getElementById('categorySelect').addEventListener('change', () => {
                     this.allowEmptySelection = false;
@@ -571,8 +573,22 @@
                 }
             }
 
+            extractRaceTitle(htmlContent) {
+                const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
+                const titleText = doc.querySelector('body h1')?.textContent?.trim();
+                return titleText || null;
+            }
+
+            applyRaceTitle(raceTitle) {
+                const headerTitle = document.getElementById('pageTitle');
+                const resolvedTitle = raceTitle || this.defaultHeaderTitle;
+                headerTitle.textContent = resolvedTitle;
+                document.title = raceTitle || this.defaultPageTitle;
+            }
+
             loadAndParse(htmlContent) {
                 try {
+                    this.applyRaceTitle(this.extractRaceTitle(htmlContent));
                     this.categories = this.parser.parseRaceData(htmlContent);
                     const categoryCount = Object.keys(this.categories).length;
                     let totalRunners = 0;
