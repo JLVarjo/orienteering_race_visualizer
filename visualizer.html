@@ -218,6 +218,9 @@
                     <option value="cumulative">Time</option>
                     <option value="position">Position</option>
                 </select>
+
+                <button id="selectAllRunnersBtn" type="button">Select All</button>
+                <button id="deselectAllRunnersBtn" type="button">Deselect All</button>
             </div>
 
             <div class="chart-container">
@@ -499,12 +502,32 @@
                 this.categories = {};
                 this.parser = new RaceParser();
                 this.selectedRunners = new Set();
+                this.allowEmptySelection = false;
 
                 document.getElementById('categorySelect').addEventListener('change', () => {
+                    this.allowEmptySelection = false;
                     this.selectedRunners.clear();
                     this.visualize();
                 });
                 document.getElementById('metricSelect').addEventListener('change', () => this.visualize());
+                document.getElementById('selectAllRunnersBtn').addEventListener('click', () => this.selectAllRunners());
+                document.getElementById('deselectAllRunnersBtn').addEventListener('click', () => this.deselectAllRunners());
+            }
+
+            selectAllRunners() {
+                const categoryName = document.getElementById('categorySelect').value;
+                if (!categoryName || !this.categories[categoryName]) return;
+
+                this.allowEmptySelection = false;
+                this.selectedRunners.clear();
+                this.categories[categoryName].runners.forEach(runner => this.selectedRunners.add(runner.name));
+                this.visualize(true);
+            }
+
+            deselectAllRunners() {
+                this.allowEmptySelection = true;
+                this.selectedRunners.clear();
+                this.visualize(true);
             }
 
             async loadFromUrl(url) {
@@ -708,15 +731,12 @@
 
                 const category = this.categories[categoryName];
 
-                if (this.selectedRunners.size === 0) {
+                if (this.selectedRunners.size === 0 && !this.allowEmptySelection) {
                     category.runners.forEach(runner => this.selectedRunners.add(runner.name));
                 }
 
                 const selectedRunners = category.runners.filter(runner => this.selectedRunners.has(runner.name));
-                if (selectedRunners.length === 0) {
-                    category.runners.forEach(runner => this.selectedRunners.add(runner.name));
-                    selectedRunners.push(...category.runners);
-                }
+                const referenceRunners = selectedRunners.length > 0 ? selectedRunners : category.runners;
 
                 selectedRunners.sort((a, b) => {
                     const aTime = a.times[a.times.length - 1] || Infinity;
@@ -725,6 +745,9 @@
                 });
 
                 const xPositions = this.calculateXPositions(category.controls, category.runners);
+                const xMin = xPositions.length > 0 ? xPositions[0] : 0;
+                const xMaxRaw = xPositions.length > 0 ? xPositions[xPositions.length - 1] : 1;
+                const xMax = xMaxRaw === xMin ? xMin + 1 : xMaxRaw;
                 const controlLabels = category.controls.map(c => `${c}`);
                 const originalIndices = category.commonEntries
                     ? category.commonEntries.map(entry => entry.index)
@@ -733,10 +756,10 @@
                 const datasets = category.runners.map((runner, idx) => {
                     const color = this.generateColor(idx, category.runners.length);
                     const yData = metric === 'time'
-                        ? this.calculateTimeDifferences(runner.times, selectedRunners)
+                        ? this.calculateTimeDifferences(runner.times, referenceRunners)
                         : metric === 'cumulative'
                             ? this.calculateCumulativeTimes(runner.times)
-                            : this.calculatePositions(runner.times, selectedRunners);
+                            : this.calculatePositions(runner.times, referenceRunners);
                     const isSelected = this.selectedRunners.has(runner.name);
 
                     const data = yData.map((y, i) => ({
@@ -799,6 +822,7 @@
                                 position: 'right',
                                 onClick: (event, legendItem, legend) => {
                                     const runnerName = legendItem.text;
+                                    this.allowEmptySelection = true;
                                     if (this.selectedRunners.has(runnerName)) {
                                         this.selectedRunners.delete(runnerName);
                                     } else {
@@ -834,6 +858,8 @@
                             },
                             x: {
                                 type: 'linear',
+                                min: xMin,
+                                max: xMax,
                                 title: {
                                     display: true,
                                     text: 'Race Progress (control number/code)'
