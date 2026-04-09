@@ -1178,13 +1178,7 @@
             const fileUrl = fileParam || urlParam;
             if (fileUrl) {
                 document.querySelector('input[name="inputType"][value="url"]').checked = true;
-                if (fileParam) {
-                    document.getElementById('uploadSection').style.display = 'none';
-                } else {
-                    document.getElementById('inputTypeSelector').style.display = 'none';
-                    document.getElementById('urlInputSection').style.display = 'flex';
-                    document.getElementById('fileInputSection').style.display = 'none';
-                }
+                document.getElementById('uploadSection').style.display = 'none';
                 document.getElementById('urlInput').value = fileUrl;
                 visualizer.loadFromUrl(fileUrl);
             }
