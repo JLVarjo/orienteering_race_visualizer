@@ -192,14 +192,14 @@
             </div>
             <div id="urlInputSection" class="file-input-wrapper">
                 <input id="urlInput" type="text"
-                    placeholder="Enter URL of race HTML file (e.g. http://localhost:8000/v260326.html)">
+                    placeholder="Enter URL of race JSON file (e.g. http://localhost:8000/results.json)">
             </div>
             <div id="fileInputSection" class="file-input-wrapper" style="display: none;">
-                <input id="fileInput" type="file" accept=".html">
+                <input id="fileInput" type="file" accept=".json,application/json">
             </div>
             <button onclick="loadData()">Load Race Data</button>
             <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                📡 For URL: The file must be served by HTTP(S) and CORS-enabled (or same origin) for browser fetch.
+                📡 For URL: The JSON file must be served by HTTP(S) and CORS-enabled (or same origin) for browser fetch.
             </div>
         </div>
 
@@ -252,192 +252,126 @@
 
     <script>
         class RaceParser {
-            parseRaceData(htmlContent) {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlContent, 'text/html');
-
-                // Tuloskasa format uses table-based class blocks.
-                const tuloskasaCategories = this.parseTuloskasaData(doc);
-                if (Object.keys(tuloskasaCategories).length > 0) {
-                    return tuloskasaCategories;
+            parseRaceData(jsonData) {
+                if (!jsonData || !Array.isArray(jsonData.starts)) {
+                    throw new Error('Invalid JSON format: expected a top-level "starts" array.');
                 }
 
                 const categories = {};
 
-                const preElements = Array.from(doc.querySelectorAll('pre'));
+                jsonData.starts.forEach((start, startIndex) => {
+                    const startLabel = (start?.label || '').trim();
+                    const classes = Array.isArray(start?.classes) ? start.classes : [];
 
-                preElements.forEach((pre) => {
-                    let prevElement = pre.previousElementSibling;
-                    let categoryName = null;
+                    classes.forEach((classEntry, classIndex) => {
+                        const classNameRaw = (classEntry?.name || '').trim();
+                        const className = classNameRaw || `Class ${classIndex + 1}`;
+                        const courses = Array.isArray(classEntry?.courses) ? classEntry.courses : [];
+                        const results = Array.isArray(classEntry?.results) ? classEntry.results : [];
 
-                    while (prevElement) {
-                        if (prevElement.tagName === 'H3') {
-                            const text = prevElement.textContent.trim();
-                            const match = text.match(/^([A-Z]{3})/);
-                            if (match) {
-                                categoryName = match[1];
+                        const coursesById = new Map();
+                        courses.forEach((course, courseIndex) => {
+                            const courseNameRaw = (course?.name || '').trim();
+                            const courseName = courseNameRaw || `Course ${courseIndex + 1}`;
+                            const normalizedControls = this.normalizeControls(course?.controls);
+                            if (normalizedControls.length === 0) return;
+
+                            const resolvedId = course?.id ?? `course-index-${courseIndex}`;
+                            coursesById.set(resolvedId, {
+                                id: resolvedId,
+                                name: courseName,
+                                controls: normalizedControls,
+                                runners: []
+                            });
+                        });
+
+                        results.forEach((result) => {
+                            if (!this.isValidResult(result)) return;
+
+                            const runnerName = (result?.name || '').trim();
+                            if (!runnerName) return;
+
+                            const courseKey = result?.courseId ?? this.getFirstCourseKey(coursesById);
+                            if (courseKey === null || !coursesById.has(courseKey)) return;
+
+                            const course = coursesById.get(courseKey);
+                            const times = this.normalizeSplits(result?.splits, course.controls.length);
+                            if (times.length !== course.controls.length || times.every(t => t === null)) {
+                                return;
                             }
-                            break;
-                        }
-                        prevElement = prevElement.previousElementSibling;
-                    }
 
-                    if (categoryName) {
-                        const parsed = this.parsePreContent(categoryName, pre.textContent);
-                        if (parsed.runners.length > 0 && parsed.controls.length > 0) {
-                            parsed.groupKey = 'all';
-                            parsed.courseName = 'all';
-                            parsed.forkingName = categoryName;
-                            categories[categoryName] = parsed;
-                        }
-                    }
+                            course.runners.push({ name: runnerName, times });
+                        });
+
+                        coursesById.forEach((course) => {
+                            if (course.runners.length === 0) return;
+
+                            const baseCategoryName = this.buildCategoryName(startLabel, className, course.name);
+                            const uniqueName = this.makeUniqueCategoryName(baseCategoryName, categories);
+                            categories[uniqueName] = {
+                                controls: course.controls,
+                                runners: course.runners,
+                                categoryName: uniqueName,
+                                groupKey: startLabel || className,
+                                courseName: startLabel || className,
+                                forkingName: course.name
+                            };
+                        });
+                    });
                 });
 
                 return categories;
             }
 
-            parseTuloskasaData(doc) {
-                const forkBlocks = Array.from(doc.querySelectorAll('section.fork-block'));
-                if (forkBlocks.length > 0) {
-                    return this.parseTuloskasaForkBlocks(doc, forkBlocks);
-                }
-
-                return this.parseTuloskasaClassBlocks(doc);
+            buildCategoryName(startLabel, className, courseName) {
+                const classAndCourse = className === courseName ? className : `${className} - ${courseName}`;
+                if (!startLabel) return classAndCourse;
+                return `${startLabel} - ${classAndCourse}`;
             }
 
-            parseTuloskasaForkBlocks(doc, forkBlocks = null) {
-                const categories = {};
-                const blocks = forkBlocks || Array.from(doc.querySelectorAll('section.fork-block'));
-
-                blocks.forEach((block) => {
-                    const heading = block.querySelector('h3.fork-heading, h3, h2');
-                    if (!heading) return;
-
-                    const forkingName = heading.textContent.trim();
-                    if (!forkingName) return;
-
-                    const courseName = this.resolveForkBlockCourseName(block, forkingName);
-                    const categoryName = courseName ? `${courseName} - ${forkingName}` : forkingName;
-
-                    const controls = this.extractTuloskasaControls(block);
-                    if (controls.length === 0) return;
-
-                    const runners = this.extractTuloskasaRunners(block, controls.length);
-                    if (runners.length > 0) {
-                        const uniqueName = this.makeUniqueCategoryName(categoryName, categories);
-                        categories[uniqueName] = {
-                            controls,
-                            runners,
-                            categoryName: uniqueName,
-                            groupKey: courseName || 'all',
-                            courseName: courseName || 'all',
-                            forkingName
-                        };
-                    }
-                });
-
-                return categories;
-            }
-
-            parseTuloskasaClassBlocks(doc) {
-                const categories = {};
-                const classBlocks = Array.from(doc.querySelectorAll('section.class-block'));
-
-                classBlocks.forEach((block) => {
-                    const heading = block.querySelector('h3, h2');
-                    if (!heading) return;
-
-                    const headingText = heading.textContent.trim();
-                    if (!headingText) return;
-
-                    const startBlock = block.closest('section.start-block');
-                    const startHeading = startBlock ? startBlock.querySelector('h2.start-heading') : null;
-                    const courseName = startHeading ? startHeading.textContent.trim() : '';
-                    const categoryMatch = headingText.match(/^([A-Z]{3})\b/);
-                    const forkingName = categoryMatch ? categoryMatch[1] : headingText;
-                    const categoryName = courseName && courseName !== forkingName
-                        ? `${courseName} - ${forkingName}`
-                        : forkingName;
-
-                    const controls = this.extractTuloskasaControls(block);
-
-                    if (controls.length === 0) return;
-
-                    const runners = this.extractTuloskasaRunners(block, controls.length);
-
-                    if (runners.length > 0) {
-                        const uniqueName = this.makeUniqueCategoryName(categoryName, categories);
-                        categories[uniqueName] = {
-                            controls,
-                            runners,
-                            categoryName: uniqueName,
-                            groupKey: courseName || 'all',
-                            courseName: courseName || 'all',
-                            forkingName: forkingName
-                        };
-                    }
-                });
-
-                return categories;
-            }
-
-            resolveForkBlockCourseName(block, forkingName) {
-                const forksContainer = block.closest('.forks-container');
-                if (forksContainer) {
-                    let sibling = forksContainer.previousElementSibling;
-                    while (sibling) {
-                        if (sibling.matches('section.class-block')) {
-                            const classHeading = sibling.querySelector('h2, h3');
-                            const headingText = classHeading ? classHeading.textContent.trim() : '';
-                            if (headingText) return headingText;
+            normalizeControls(controls) {
+                if (!Array.isArray(controls)) return [];
+                return controls
+                    .map(control => {
+                        if (control === null || control === undefined) return null;
+                        const text = String(control).trim();
+                        if (!text) return null;
+                        if (/^\d+$/.test(text)) {
+                            return text.replace(/^0+/, '') || '0';
                         }
-                        sibling = sibling.previousElementSibling;
-                    }
-                }
-
-                if (/\brata\b/i.test(forkingName)) {
-                    return forkingName;
-                }
-
-                return '';
-            }
-
-            extractTuloskasaControls(block) {
-                return Array.from(block.querySelectorAll('th.ctrl'))
-                    .map((cell) => {
-                        const smallCode = cell.querySelector('small.ctrl-code');
-                        const rawText = (smallCode ? smallCode.textContent : cell.textContent).trim();
-                        if (!rawText) return null;
-                        if (/^\d+$/.test(rawText)) {
-                            return rawText.replace(/^0+/, '') || '0';
-                        }
-                        return rawText;
+                        return text;
                     })
                     .filter(Boolean);
             }
 
-            extractTuloskasaRunners(block, expectedControlCount) {
-                const runners = [];
-                const rows = Array.from(block.querySelectorAll('tbody tr'));
+            normalizeSplits(splits, expectedCount) {
+                if (!Array.isArray(splits)) return [];
 
-                rows.forEach((row) => {
-                    const nameCell = row.querySelector('td.name');
-                    const resultCell = row.querySelector('td.time');
-                    if (!nameCell || !resultCell) return;
-
-                    const runnerName = nameCell.textContent.trim();
-                    const resultText = resultCell.textContent.trim();
-                    if (!runnerName || !resultText) return;
-
-                    if (/DSQ|HYL|HYLÄ|KESKEY|DNF|DNS/i.test(resultText)) return;
-
-                    const times = this.extractTimesFromTuloskasaRow(row, expectedControlCount);
-                    if (times.length === expectedControlCount && times.some(t => t !== null)) {
-                        runners.push({ name: runnerName, times });
-                    }
+                const normalized = splits.slice(0, expectedCount).map((value) => {
+                    if (value === null || value === undefined) return null;
+                    const numeric = Number(value);
+                    if (!Number.isFinite(numeric) || numeric < 0) return null;
+                    return numeric;
                 });
 
-                return runners;
+                while (normalized.length < expectedCount) {
+                    normalized.push(null);
+                }
+
+                return normalized;
+            }
+
+            isValidResult(result) {
+                const status = String(result?.status ?? '').trim().toLowerCase();
+                if (!status) return false;
+                return status === 'ok';
+            }
+
+            getFirstCourseKey(coursesById) {
+                for (const key of coursesById.keys()) {
+                    return key;
+                }
+                return null;
             }
 
             makeUniqueCategoryName(baseName, categories) {
@@ -447,150 +381,6 @@
                     counter++;
                 }
                 return `${baseName} (${counter})`;
-            }
-
-            extractTimesFromTuloskasaRow(row, expectedCount) {
-                const controlCells = Array.from(row.querySelectorAll('td.ctrl'));
-                if (controlCells.length < expectedCount) {
-                    return [];
-                }
-
-                const times = [];
-                let lastCumulative = null;
-                for (let i = 0; i < expectedCount; i++) {
-                    const cell = controlCells[i];
-                    const offsetText = (cell.querySelector('.offset')?.textContent || '').trim();
-                    const splitText = (cell.querySelector('.split')?.textContent || '').trim();
-
-                    const offsetSeconds = this.parseClockTimeToSeconds(offsetText);
-                    if (offsetSeconds !== null) {
-                        // Prefer the authoritative cumulative offset time
-                        times.push(offsetSeconds);
-                        lastCumulative = offsetSeconds;
-                    } else {
-                        // Offset missing — try to reconstruct from split + last known cumulative.
-                        // In tuloskasa, splits after a missed punch are measured from the last
-                        // punched control, so accumulating from lastCumulative is correct.
-                        const splitSeconds = this.parseClockTimeToSeconds(splitText);
-                        if (splitSeconds !== null && lastCumulative !== null) {
-                            const reconstructed = lastCumulative + splitSeconds;
-                            times.push(reconstructed);
-                            lastCumulative = reconstructed;
-                        } else {
-                            // Missed punch (–) or no prior reference — leave as null gap
-                            times.push(null);
-                            // Do NOT update lastCumulative: next split is still from last valid punch
-                        }
-                    }
-                }
-
-                return times;
-            }
-
-            parseClockTimeToSeconds(timeText) {
-                const normalized = timeText.replace(/\s+/g, '');
-                if (!normalized || normalized === '-' || normalized === '–') {
-                    return null;
-                }
-
-                const parts = normalized.split(':');
-                if (parts.length === 2) {
-                    const minutes = parseInt(parts[0], 10);
-                    const seconds = parseInt(parts[1], 10);
-                    if (Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
-                    return minutes * 60 + seconds;
-                }
-
-                if (parts.length === 3) {
-                    const hours = parseInt(parts[0], 10);
-                    const minutes = parseInt(parts[1], 10);
-                    const seconds = parseInt(parts[2], 10);
-                    if (Number.isNaN(hours) || Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
-                    return hours * 3600 + minutes * 60 + seconds;
-                }
-
-                return null;
-            }
-
-            parsePreContent(categoryName, content) {
-                const lines = content.split('\n');
-                let controls = [];
-                const runners = [];
-                let headerFound = false;
-                let headerIdx = -1;
-
-                for (let i = 0; i < lines.length; i++) {
-                    if (lines[i].includes('[') && lines[i].includes('Tulos')) {
-                        controls = this.extractControlCodes(lines[i]);
-                        headerFound = true;
-                        headerIdx = i;
-                        break;
-                    }
-                }
-
-                if (!headerFound || controls.length === 0) {
-                    return { controls: [], runners: [], categoryName };
-                }
-
-                for (let i = headerIdx + 1; i < lines.length; i++) {
-                    const line = lines[i];
-                    if (!line.match(/^\s+\d+\./)) continue;
-
-                    const trimmed = line.trim();
-                    if (trimmed.includes('Hylätty') || trimmed.includes('Keskeytti') || trimmed.endsWith('-')) {
-                        continue;
-                    }
-
-                    if (!trimmed.match(/\d\-(?:\d+\.\d{2}\.\d{2}|\d{1,2}\.\d{2})/)) {
-                        continue;
-                    }
-
-                    const nameMatch = trimmed.match(/^\d+\.\s+(.+?)(\s{2,}|\s+\d\-)/);
-                    if (!nameMatch) continue;
-
-                    const runnerName = nameMatch[1].trim();
-                    const times = this.extractTimesFromLine(line, controls.length);
-
-                    if (times.length === controls.length) {
-                        runners.push({ name: runnerName, times });
-                    }
-                }
-
-                return { controls, runners, categoryName };
-            }
-
-            extractControlCodes(headerLine) {
-                const regex = /\[(\d{3})\]/g;
-                const controls = [];
-                let match;
-                while ((match = regex.exec(headerLine)) !== null) {
-                    match[1] = match[1].replace(/^0+/, '');
-                    controls.push(match[1]);
-                }
-                return controls;
-            }
-
-            extractTimesFromLine(timeLineStr, expectedCount) {
-                const times = [];
-                const pattern = /\d\-(?:(\d+)\.(\d{2})\.(\d{2})|(\d{1,2})\.(\d{2}))/g;
-                let match;
-
-                while ((match = pattern.exec(timeLineStr)) !== null && times.length < expectedCount) {
-                    let totalSeconds = 0;
-                    if (match[1] !== undefined) {
-                        const hours = parseInt(match[1], 10);
-                        const minutes = parseInt(match[2], 10);
-                        const seconds = parseInt(match[3], 10);
-                        totalSeconds = hours * 3600 + minutes * 60 + seconds;
-                    } else {
-                        const minutes = parseInt(match[4], 10);
-                        const seconds = parseInt(match[5], 10);
-                        totalSeconds = minutes * 60 + seconds;
-                    }
-                    times.push(totalSeconds);
-                }
-
-                return times;
             }
         }
 
@@ -642,24 +432,19 @@
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
                     }
-                    const buffer = await response.arrayBuffer();
-                    let html = new TextDecoder('utf-8').decode(buffer);
-                    const doc = new DOMParser().parseFromString(html, 'text/html');
-                    const charset = this.getCharset(doc);
-                    if (charset && charset.toLowerCase() !== 'utf-8') {
-                        html = new TextDecoder('iso-8859-1').decode(buffer);
-                    }
-                    this.loadAndParse(html);
+                    const jsonData = await response.json();
+                    this.loadAndParse(jsonData);
                 } catch (err) {
                     console.error('Fetch error:', err);
                     this.showMessage('Unable to fetch file: ' + err.message, 'error');
                 }
             }
 
-            extractRaceTitle(htmlContent) {
-                const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
-                const titleText = doc.querySelector('body h1')?.textContent?.trim();
-                return titleText || null;
+            extractRaceTitle(jsonData) {
+                const titleText = jsonData?.event;
+                if (typeof titleText !== 'string') return null;
+                const trimmed = titleText.trim();
+                return trimmed || null;
             }
 
             applyRaceTitle(raceTitle) {
@@ -669,10 +454,10 @@
                 document.title = raceTitle || this.defaultPageTitle;
             }
 
-            loadAndParse(htmlContent) {
+            loadAndParse(jsonData) {
                 try {
-                    this.applyRaceTitle(this.extractRaceTitle(htmlContent));
-                    this.categories = this.parser.parseRaceData(htmlContent);
+                    this.applyRaceTitle(this.extractRaceTitle(jsonData));
+                    this.categories = this.parser.parseRaceData(jsonData);
                     const categoryCount = Object.keys(this.categories).length;
                     let totalRunners = 0;
                     Object.values(this.categories).forEach(cat => totalRunners += cat.runners.length);
@@ -690,7 +475,7 @@
                     return true;
                 } catch (err) {
                     console.error('Parse error:', err);
-                    this.showMessage('Error parsing file: ' + err.message, 'error');
+                    this.showMessage('Error parsing JSON: ' + err.message, 'error');
                     return false;
                 }
             }
@@ -1113,19 +898,6 @@
                 }
             }
 
-            getCharset(doc) {
-                const meta = doc.querySelector('meta[http-equiv="Content-Type"]');
-                if (meta) {
-                    const content = meta.getAttribute('content');
-                    if (content) {
-                        const match = content.match(/charset=([^;]+)/i);
-                        if (match) {
-                            return match[1].trim();
-                        }
-                    }
-                }
-                return null;
-            }
         }
 
         const visualizer = new RaceVisualizer();
@@ -1156,19 +928,18 @@
                 }
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const buffer = e.target.result;
-                    let html = new TextDecoder('utf-8').decode(buffer);
-                    const doc = new DOMParser().parseFromString(html, 'text/html');
-                    const charset = visualizer.getCharset(doc);
-                    if (charset && charset.toLowerCase() !== 'utf-8') {
-                        html = new TextDecoder('iso-8859-1').decode(buffer);
+                    try {
+                        const rawText = String(e.target.result || '');
+                        const jsonData = JSON.parse(rawText);
+                        visualizer.loadAndParse(jsonData);
+                    } catch (err) {
+                        visualizer.showMessage('Error parsing JSON file: ' + err.message, 'error');
                     }
-                    visualizer.loadAndParse(html);
                 };
                 reader.onerror = () => {
                     visualizer.showMessage('Error reading file', 'error');
                 };
-                reader.readAsArrayBuffer(file);
+                reader.readAsText(file, 'utf-8');
             }
         }
 

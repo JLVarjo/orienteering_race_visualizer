@@ -1,0 +1,1003 @@
+{
+  "event": "Yhteislähtö Petosenmäki",
+  "source": "eresults",
+  "generatedAt": "2026-04-10T13:12:30.104Z",
+  "starts": [
+    {
+      "label": "klo 18",
+      "classes": [
+        {
+          "id": null,
+          "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "031",
+                "034",
+                "043",
+                "035",
+                "037",
+                "040",
+                "036",
+                "042",
+                "037",
+                "038",
+                "039",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Hiltunen Paavo",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2268,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                174,
+                323,
+                400,
+                583,
+                757,
+                865,
+                982,
+                1125,
+                1398,
+                1500,
+                1590,
+                1734,
+                1949,
+                2091,
+                2239,
+                2268,
+                2268
+              ]
+            },
+            {
+              "name": "Pietarinen Juha",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2749,
+              "position": 2,
+              "courseId": null,
+              "splits": [
+                226,
+                392,
+                477,
+                747,
+                952,
+                1187,
+                1303,
+                1429,
+                1808,
+                1934,
+                2031,
+                2168,
+                2394,
+                2550,
+                2717,
+                2749,
+                2749
+              ]
+            },
+            {
+              "name": "Holm Riikka",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2941,
+              "position": 3,
+              "courseId": null,
+              "splits": [
+                172,
+                389,
+                502,
+                765,
+                1037,
+                1179,
+                1320,
+                1458,
+                1748,
+                1942,
+                2080,
+                2240,
+                2530,
+                2708,
+                2900,
+                2941,
+                2941
+              ]
+            },
+            {
+              "name": "Nissinen Eetu",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 3343,
+              "position": 4,
+              "courseId": null,
+              "splits": [
+                157,
+                368,
+                461,
+                744,
+                1015,
+                1141,
+                1293,
+                1445,
+                1799,
+                1978,
+                2154,
+                2378,
+                2840,
+                3103,
+                3312,
+                3343,
+                3343
+              ]
+            }
+          ]
+        },
+        {
+          "id": null,
+          "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "031",
+                "034",
+                "043",
+                "035",
+                "037",
+                "038",
+                "039",
+                "042",
+                "037",
+                "040",
+                "036",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Saari Olavi",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2126,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                191,
+                327,
+                404,
+                572,
+                763,
+                872,
+                964,
+                1122,
+                1309,
+                1391,
+                1564,
+                1652,
+                1833,
+                1953,
+                2101,
+                2126,
+                2126
+              ]
+            },
+            {
+              "name": "Moilanen Tomi",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2753,
+              "position": 2,
+              "courseId": null,
+              "splits": [
+                199,
+                359,
+                471,
+                665,
+                957,
+                1146,
+                1271,
+                1408,
+                1731,
+                1928,
+                2056,
+                2165,
+                2383,
+                2535,
+                2722,
+                2753,
+                2753
+              ]
+            },
+            {
+              "name": "Rytkönen Toivo",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 4030,
+              "position": 3,
+              "courseId": null,
+              "splits": [
+                168,
+                625,
+                738,
+                1080,
+                1547,
+                1730,
+                1881,
+                2123,
+                2480,
+                2655,
+                2858,
+                3068,
+                3516,
+                3784,
+                3996,
+                4030,
+                4030
+              ]
+            },
+            {
+              "name": "Rytkönen Jussi",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 4036,
+              "position": 4,
+              "courseId": null,
+              "splits": [
+                180,
+                406,
+                528,
+                921,
+                1294,
+                1737,
+                1911,
+                2118,
+                2470,
+                2663,
+                2861,
+                3071,
+                3503,
+                3788,
+                3999,
+                4036,
+                4036
+              ]
+            },
+            {
+              "name": "Karakorpi Kaisu",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 4066,
+              "position": 5,
+              "courseId": null,
+              "splits": [
+                189,
+                456,
+                577,
+                975,
+                1375,
+                1618,
+                1802,
+                2042,
+                2363,
+                2525,
+                2720,
+                2891,
+                3346,
+                3731,
+                4018,
+                4066,
+                4066
+              ]
+            },
+            {
+              "name": "Lajunen Liisa",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 4068,
+              "position": 6,
+              "courseId": null,
+              "splits": [
+                196,
+                459,
+                582,
+                970,
+                1372,
+                1608,
+                1798,
+                2040,
+                2367,
+                2535,
+                2710,
+                2893,
+                3340,
+                3728,
+                4024,
+                4068,
+                4068
+              ]
+            }
+          ]
+        },
+        {
+          "id": null,
+          "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "032",
+                "033",
+                "043",
+                "035",
+                "037",
+                "038",
+                "039",
+                "042",
+                "037",
+                "040",
+                "036",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Hoikka Sulo",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2135,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                166,
+                266,
+                379,
+                587,
+                780,
+                892,
+                986,
+                1110,
+                1325,
+                1418,
+                1535,
+                1660,
+                1850,
+                1979,
+                2115,
+                2135,
+                2135
+              ]
+            },
+            {
+              "name": "Kukkola Pauli",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2140,
+              "position": 2,
+              "courseId": null,
+              "splits": [
+                162,
+                269,
+                374,
+                558,
+                789,
+                887,
+                979,
+                1108,
+                1316,
+                1408,
+                1530,
+                1658,
+                1848,
+                1977,
+                2113,
+                2140,
+                2140
+              ]
+            },
+            {
+              "name": "Auvinen Toni",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2142,
+              "position": 3,
+              "courseId": null,
+              "splits": [
+                153,
+                272,
+                381,
+                580,
+                775,
+                880,
+                972,
+                1150,
+                1349,
+                1457,
+                1579,
+                1671,
+                1858,
+                1991,
+                2118,
+                2142,
+                2142
+              ]
+            },
+            {
+              "name": "Leppävuori Päivi",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2937,
+              "position": 4,
+              "courseId": null,
+              "splits": [
+                190,
+                324,
+                469,
+                816,
+                1063,
+                1286,
+                1429,
+                1592,
+                1820,
+                1947,
+                2094,
+                2242,
+                2564,
+                2732,
+                2897,
+                2937,
+                2937
+              ]
+            },
+            {
+              "name": "Hämäläinen Siiri",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 3015,
+              "position": 5,
+              "courseId": null,
+              "splits": [
+                176,
+                359,
+                476,
+                754,
+                991,
+                1138,
+                1260,
+                1420,
+                1663,
+                1809,
+                2101,
+                2312,
+                2599,
+                2761,
+                2985,
+                3015,
+                3015
+              ]
+            },
+            {
+              "name": "Turunen Jaana",
+              "club": null,
+              "status": "Dsq",
+              "totalTime": null,
+              "position": null,
+              "courseId": null,
+              "splits": null
+            }
+          ]
+        },
+        {
+          "id": null,
+          "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "032",
+                "033",
+                "043",
+                "035",
+                "037",
+                "040",
+                "036",
+                "042",
+                "037",
+                "038",
+                "039",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Hoikka Marko",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2111,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                122,
+                224,
+                326,
+                505,
+                690,
+                782,
+                915,
+                1012,
+                1270,
+                1414,
+                1496,
+                1655,
+                1840,
+                1958,
+                2084,
+                2111,
+                2111
+              ]
+            },
+            {
+              "name": "Mäennenä Tarja",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2594,
+              "position": 2,
+              "courseId": null,
+              "splits": [
+                145,
+                345,
+                523,
+                724,
+                933,
+                1161,
+                1279,
+                1377,
+                1553,
+                1698,
+                1792,
+                1930,
+                2211,
+                2422,
+                2564,
+                2594,
+                2594
+              ]
+            },
+            {
+              "name": "Saari Henna",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2737,
+              "position": 3,
+              "courseId": null,
+              "splits": [
+                164,
+                292,
+                407,
+                630,
+                875,
+                1004,
+                1140,
+                1260,
+                1584,
+                1719,
+                1857,
+                2012,
+                2371,
+                2521,
+                2709,
+                2737,
+                2737
+              ]
+            },
+            {
+              "name": "Turunen Jouko",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 3195,
+              "position": 4,
+              "courseId": null,
+              "splits": [
+                200,
+                329,
+                467,
+                752,
+                1019,
+                1150,
+                1298,
+                1518,
+                2069,
+                2219,
+                2336,
+                2489,
+                2768,
+                2949,
+                3158,
+                3195,
+                3195
+              ]
+            },
+            {
+              "name": "Korventausta Antti",
+              "club": null,
+              "status": "Dsq",
+              "totalTime": null,
+              "position": null,
+              "courseId": null,
+              "splits": null
+            },
+            {
+              "name": "Hall Anette",
+              "club": null,
+              "status": "Dsq",
+              "totalTime": null,
+              "position": null,
+              "courseId": null,
+              "splits": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "klo 20",
+      "classes": [
+        {
+          "id": null,
+          "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "031",
+                "034",
+                "043",
+                "035",
+                "037",
+                "040",
+                "036",
+                "042",
+                "037",
+                "038",
+                "039",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Himanen Olli",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 1947,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                115,
+                252,
+                335,
+                508,
+                681,
+                769,
+                874,
+                969,
+                1148,
+                1244,
+                1336,
+                1458,
+                1640,
+                1783,
+                1918,
+                1947,
+                1947
+              ]
+            },
+            {
+              "name": "Linna Aino-Maria",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 4325,
+              "position": 2,
+              "courseId": null,
+              "splits": [
+                142,
+                399,
+                494,
+                723,
+                1416,
+                1514,
+                1648,
+                2151,
+                2582,
+                2750,
+                2887,
+                3259,
+                3834,
+                4040,
+                4289,
+                4325,
+                4325
+              ]
+            },
+            {
+              "name": "Taivainen Helena",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 4329,
+              "position": 3,
+              "courseId": null,
+              "splits": [
+                148,
+                402,
+                503,
+                728,
+                1426,
+                1526,
+                1654,
+                2150,
+                2592,
+                2764,
+                2892,
+                3264,
+                3829,
+                4037,
+                4293,
+                4329,
+                4329
+              ]
+            }
+          ]
+        },
+        {
+          "id": null,
+          "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "031",
+                "034",
+                "043",
+                "035",
+                "037",
+                "038",
+                "039",
+                "042",
+                "037",
+                "040",
+                "036",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Pentti Pekka",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2831,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                131,
+                395,
+                500,
+                758,
+                1024,
+                1136,
+                1268,
+                1434,
+                1711,
+                1846,
+                2023,
+                2165,
+                2425,
+                2605,
+                2801,
+                2831,
+                2831
+              ]
+            }
+          ]
+        },
+        {
+          "id": null,
+          "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "032",
+                "033",
+                "043",
+                "035",
+                "037",
+                "038",
+                "039",
+                "042",
+                "037",
+                "040",
+                "036",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Saari Ville",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 3149,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                131,
+                244,
+                342,
+                539,
+                829,
+                1094,
+                1191,
+                1451,
+                2079,
+                2177,
+                2309,
+                2471,
+                2775,
+                2931,
+                3116,
+                3149,
+                3149
+              ]
+            },
+            {
+              "name": "Lehtivarjo Juuso",
+              "club": null,
+              "status": "Dsq",
+              "totalTime": null,
+              "position": null,
+              "courseId": null,
+              "splits": null
+            }
+          ]
+        },
+        {
+          "id": null,
+          "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "courses": [
+            {
+              "id": null,
+              "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "controls": [
+                "032",
+                "033",
+                "043",
+                "035",
+                "037",
+                "040",
+                "036",
+                "042",
+                "037",
+                "038",
+                "039",
+                "042",
+                "044",
+                "046",
+                "047",
+                "080",
+                "MAALI"
+              ]
+            }
+          ],
+          "results": [
+            {
+              "name": "Hoikka Osku",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 2198,
+              "position": 1,
+              "courseId": null,
+              "splits": [
+                114,
+                227,
+                332,
+                528,
+                832,
+                913,
+                1016,
+                1177,
+                1363,
+                1504,
+                1610,
+                1731,
+                1914,
+                2041,
+                2173,
+                2198,
+                2198
+              ]
+            },
+            {
+              "name": "Multala Sanna",
+              "club": null,
+              "status": "Ok",
+              "totalTime": 3187,
+              "position": 2,
+              "courseId": null,
+              "splits": [
+                193,
+                385,
+                508,
+                747,
+                1058,
+                1237,
+                1382,
+                1534,
+                1914,
+                2087,
+                2229,
+                2432,
+                2737,
+                2944,
+                3141,
+                3187,
+                3187
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
