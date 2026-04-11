@@ -108,10 +108,84 @@
             border-color: #667eea;
         }
 
+        .chart-layout {
+            display: flex;
+            gap: 16px;
+            align-items: stretch;
+            margin-bottom: 40px;
+        }
+
         .chart-container {
             position: relative;
             height: 500px;
-            margin-bottom: 40px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .runner-legend-panel {
+            width: 280px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .runner-legend-title {
+            padding: 12px;
+            border-bottom: 1px solid #e6e6e6;
+            font-size: 13px;
+            font-weight: 700;
+            color: #444;
+        }
+
+        .runner-legend-list {
+            overflow-y: auto;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .runner-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .runner-legend-item:hover {
+            background: #f0f3ff;
+        }
+
+        .runner-legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            flex: 0 0 12px;
+        }
+
+        .runner-legend-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 1050px) {
+            .chart-layout {
+                flex-direction: column;
+            }
+
+            .runner-legend-panel {
+                width: 100%;
+                height: 220px;
+            }
         }
 
         .stats {
@@ -222,8 +296,14 @@
                 <button id="deselectAllRunnersBtn" type="button">Poista valinnat</button>
             </div>
 
-            <div class="chart-container">
-                <canvas id="raceChart"></canvas>
+            <div class="chart-layout">
+                <div class="chart-container">
+                    <canvas id="raceChart"></canvas>
+                </div>
+                <div class="runner-legend-panel">
+                    <div id="runnerLegendTitle" class="runner-legend-title">Kilpailijat</div>
+                    <div id="runnerLegendList" class="runner-legend-list"></div>
+                </div>
             </div>
 
             <div class="stats">
@@ -733,33 +813,7 @@
                                 }
                             },
                             legend: {
-                                display: true,
-                                position: 'right',
-                                onClick: (event, legendItem, legend) => {
-                                    const runnerName = legendItem.text;
-                                    this.allowEmptySelection = true;
-                                    if (this.selectedRunners.has(runnerName)) {
-                                        this.selectedRunners.delete(runnerName);
-                                    } else {
-                                        this.selectedRunners.add(runnerName);
-                                    }
-                                    this.visualize(true);
-                                },
-                                labels: {
-                                    padding: 15,
-                                    font: { size: 10 },
-                                    generateLabels: (chart) => {
-                                        const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                        labels.forEach(label => {
-                                            const runnerName = label.text;
-                                            if (!this.selectedRunners.has(runnerName)) {
-                                                label.fillStyle = '#cccccc';
-                                                label.strokeStyle = '#cccccc';
-                                            }
-                                        });
-                                        return labels;
-                                    }
-                                }
+                                display: false
                             }
                         },
                         scales: {
@@ -803,7 +857,49 @@
                     legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Viiva kuvaa juoksijan sijoitusta kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää sijoituksen.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – sijoitukset lasketaan uudelleen valittuina olevista.`;
                 }
                 document.querySelector('.legend-info').innerHTML = legendText;
+                this.renderRunnerLegend(category);
                 this.updateStats();
+            }
+
+            renderRunnerLegend(category) {
+                const legendTitle = document.getElementById('runnerLegendTitle');
+                const legendList = document.getElementById('runnerLegendList');
+                if (!legendTitle || !legendList || !category) return;
+
+                legendTitle.textContent = `Kilpailijat (${this.selectedRunners.size}/${category.runners.length})`;
+                legendList.innerHTML = '';
+
+                category.runners.forEach((runner, idx) => {
+                    const item = document.createElement('label');
+                    item.className = 'runner-legend-item';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = this.selectedRunners.has(runner.name);
+
+                    const color = document.createElement('span');
+                    color.className = 'runner-legend-color';
+                    color.style.backgroundColor = this.generateColor(idx, category.runners.length);
+
+                    const name = document.createElement('span');
+                    name.className = 'runner-legend-name';
+                    name.textContent = runner.name;
+
+                    checkbox.addEventListener('change', () => {
+                        this.allowEmptySelection = true;
+                        if (checkbox.checked) {
+                            this.selectedRunners.add(runner.name);
+                        } else {
+                            this.selectedRunners.delete(runner.name);
+                        }
+                        this.visualize(true);
+                    });
+
+                    item.appendChild(checkbox);
+                    item.appendChild(color);
+                    item.appendChild(name);
+                    legendList.appendChild(item);
+                });
             }
 
             calculatePositions(runnerTimes, allRunners) {
