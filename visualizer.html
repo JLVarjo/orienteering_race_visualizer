@@ -786,10 +786,10 @@
                         ? 'Kumulatiivinen aika (sekuntia)'
                         : 'Sijoitus (1 = paras)';
                 const title = metric === 'time'
-                    ? `${categoryName} - Vertailu johtavaan (${selectedRunners.length} juoksijaa)`
+                    ? `${categoryName} - Vertailu johtavaan (${selectedRunners.length} suunnistajaa)`
                     : metric === 'cumulative'
-                        ? `${categoryName} - Kumulatiivinen aika (${selectedRunners.length} juoksijaa)`
-                        : `${categoryName} - Sijoitus (${selectedRunners.length} juoksijaa)`;
+                        ? `${categoryName} - Kumulatiivinen aika (${selectedRunners.length} suunnistajaa)`
+                        : `${categoryName} - Sijoitus (${selectedRunners.length} suunnistajaa)`;
 
                 this.chart = new Chart(ctx, {
                     type: 'line',
@@ -854,7 +854,7 @@
                 } else if (metric === 'cumulative') {
                     legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Viiva kuvaa kilpailijan kokonaisaikaa kullakin rastilla. X-akselin välit vastaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää radalla käytetyn kokonaisajan sekunteina.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – johtaja lasketaan uudelleen valittuina olevista.`;
                 } else {
-                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Viiva kuvaa juoksijan sijoitusta kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää sijoituksen.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – sijoitukset lasketaan uudelleen valittuina olevista.`;
+                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Viiva kuvaa kilpailijan sijoitusta kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää sijoituksen.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – sijoitukset lasketaan uudelleen valittuina olevista.`;
                 }
                 document.querySelector('.legend-info').innerHTML = legendText;
                 this.renderRunnerLegend(category);
