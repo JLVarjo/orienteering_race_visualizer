@@ -665,10 +665,14 @@
                     ? category.commonEntries.map(entry => entry.index)
                     : category.controls.map((_, i) => i);
 
+                const comparisonRunner = metric === 'time'
+                    ? this.getComparisonRunner(referenceRunners)
+                    : null;
+
                 const datasets = category.runners.map((runner, idx) => {
                     const color = this.generateColor(idx, category.runners.length);
                     const yData = metric === 'time'
-                        ? this.calculateTimeDifferences(runner.times, referenceRunners)
+                        ? this.calculateTimeDifferences(runner.times, referenceRunners, comparisonRunner)
                         : metric === 'cumulative'
                             ? this.calculateCumulativeTimes(runner.times)
                             : this.calculatePositions(runner.times, referenceRunners);
@@ -817,8 +821,23 @@
                 });
             }
 
-            calculateTimeDifferences(runnerTimes, allRunners) {
+            getComparisonRunner(allRunners) {
+                if (!Array.isArray(allRunners) || allRunners.length === 0) return null;
+
+                const sorted = [...allRunners].sort((a, b) => {
+                    const aTime = a.times[a.times.length - 1] ?? Infinity;
+                    const bTime = b.times[b.times.length - 1] ?? Infinity;
+                    return aTime - bTime;
+                });
+
+                return sorted.length > 0 ? sorted[0] : null;
+            }
+
+            calculateTimeDifferences(runnerTimes, allRunners, comparisonRunner) {
                 return runnerTimes.map((time, idx) => {
+                    if (comparisonRunner && (comparisonRunner.times[idx] === null || comparisonRunner.times[idx] === undefined)) {
+                        return null;
+                    }
                     if (time === null || time === undefined) return null;
                     let minTime = Infinity;
                     for (const runner of allRunners) {
@@ -827,7 +846,7 @@
                             minTime = otherTime;
                         }
                     }
-                    return time - minTime;
+                    return Number.isFinite(minTime) ? time - minTime : null;
                 });
             }
 
