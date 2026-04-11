@@ -187,11 +187,11 @@
         <div id="uploadSection" class="upload-section">
             <div id="inputTypeSelector" style="margin-bottom: 15px;">
                 <label><input type="radio" name="inputType" value="url" checked> Lataa URL:sta</label>
-                <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Lataa tiedostosta</label>
+                <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Lataa
+                    tiedostosta</label>
             </div>
             <div id="urlInputSection" class="file-input-wrapper">
-                <input id="urlInput" type="text"
-                    placeholder="Anna data.json:n URL">
+                <input id="urlInput" type="text" placeholder="Anna data.json:n URL">
             </div>
             <div id="fileInputSection" class="file-input-wrapper" style="display: none;">
                 <input id="fileInput" type="file" accept=".json,application/json">
@@ -206,14 +206,14 @@
 
         <div id="visualizationSection" class="hidden">
             <div class="controls">
-                <label for="categorySelect">Rata / hajonta:</label>
+                <label for="categorySelect">Sarja / rata:</label>
                 <select id="categorySelect" disabled>
                     <option value="">Valitse...</option>
                 </select>
 
                 <label for="metricSelect">Näytä:</label>
                 <select id="metricSelect">
-                    <option value="time">Aika jäljessä</option>
+                    <option value="time">Vertailu johtavaan</option>
                     <option value="cumulative">Kumulatiivinen aika</option>
                     <option value="position">Sijoitus</option>
                 </select>
@@ -236,7 +236,7 @@
                     <div class="stat-value" id="runnerCount">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Ratoja / hajontoja</div>
+                    <div class="stat-label">Sarjoja / ratoja</div>
                     <div class="stat-value" id="categoryCount">-</div>
                 </div>
             </div>
@@ -470,7 +470,7 @@
                     this.categories = { ...this.categories, ...combinedCategories };
 
                     this.initializeUI();
-                    this.showMessage(`Haettu ${categoryCount} sarjaa, ${totalRunners} kilpailijaa`, 'success');
+                    this.showMessage(`Haettu ${categoryCount} rataa, ${totalRunners} kilpailijaa`, 'success');
                     return true;
                 } catch (err) {
                     console.error('Parse error:', err);
@@ -706,10 +706,10 @@
                         ? 'Kumulatiivinen aika (sekuntia)'
                         : 'Sijoitus (1 = paras)';
                 const title = metric === 'time'
-                    ? `${categoryName} - Aika jäljessä leimatessa (${selectedRunners.length} juoksijaa)`
+                    ? `${categoryName} - Vertailu johtavaan (${selectedRunners.length} juoksijaa)`
                     : metric === 'cumulative'
-                        ? `${categoryName} - Kumulatiivinen aika leimatessa (${selectedRunners.length} juoksijaa)`
-                        : `${categoryName} - Sijoitus leimatessa (${selectedRunners.length} juoksijaa)`;
+                        ? `${categoryName} - Kumulatiivinen aika (${selectedRunners.length} juoksijaa)`
+                        : `${categoryName} - Sijoitus (${selectedRunners.length} juoksijaa)`;
 
                 this.chart = new Chart(ctx, {
                     type: 'line',
@@ -796,11 +796,11 @@
 
                 let legendText;
                 if (metric === 'time') {
-                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Värikäs viiva kuvaa kilpailijan aikatappiota johtavaan kilpailijaan kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää tappion sekunteina (pienempi = parempi).<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – johtaja lasketaan uudelleen valittuina olevista.`;
+                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Viiva kuvaa kilpailijan aikatappiota johtavaan kilpailijaan kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää tappion sekunteina (pienempi = parempi).<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – johtaja lasketaan uudelleen valittuina olevista.`;
                 } else if (metric === 'cumulative') {
-                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Värikäs viiva kuvaa kilpailijan kertynyttä aikaa lähdöstä kullakin rastilla. X-akselin välit vastaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää radalla käytetyn kokonaisajan sekunteina.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – johtaja lasketaan uudelleen valittuina olevista.`;
+                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Viiva kuvaa kilpailijan kokonaisaikaa kullakin rastilla. X-akselin välit vastaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää radalla käytetyn kokonaisajan sekunteina.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – johtaja lasketaan uudelleen valittuina olevista.`;
                 } else {
-                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Värikäs viiva kuvaa juoksijan sijoitusta kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää sijoituksen.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – sijoitukset lasketaan uudelleen valittuina olevista.`;
+                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Viiva kuvaa juoksijan sijoitusta kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää sijoituksen.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – sijoitukset lasketaan uudelleen valittuina olevista.`;
                 }
                 document.querySelector('.legend-info').innerHTML = legendText;
                 this.updateStats();
