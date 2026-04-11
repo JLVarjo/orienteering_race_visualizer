@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orienteering Race Visualizer</title>
+    <title>Kilpailuanalyysi</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -182,24 +182,23 @@
 
 <body>
     <div class="container">
-        <h1 id="pageTitle">Orienteering Race Visualizer</h1>
+        <h1 id="pageTitle">Kilpailuanalyysi</h1>
 
         <div id="uploadSection" class="upload-section">
             <div id="inputTypeSelector" style="margin-bottom: 15px;">
-                <label><input type="radio" name="inputType" value="url" checked> Load from URL</label>
-                <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Load from
-                    File</label>
+                <label><input type="radio" name="inputType" value="url" checked> Lataa URL:sta</label>
+                <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Lataa tiedostosta</label>
             </div>
             <div id="urlInputSection" class="file-input-wrapper">
                 <input id="urlInput" type="text"
-                    placeholder="Enter URL of race JSON file (e.g. http://localhost:8000/results.json)">
+                    placeholder="Anna data.json:n URL">
             </div>
             <div id="fileInputSection" class="file-input-wrapper" style="display: none;">
                 <input id="fileInput" type="file" accept=".json,application/json">
             </div>
-            <button onclick="loadData()">Load Race Data</button>
+            <button onclick="loadData()">Lataa</button>
             <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                📡 For URL: The JSON file must be served by HTTP(S) and CORS-enabled (or same origin) for browser fetch.
+                📡 URL-lataus vaatii saman palvelimen (same-origin) tai CORS-tuen.
             </div>
         </div>
 
@@ -207,20 +206,20 @@
 
         <div id="visualizationSection" class="hidden">
             <div class="controls">
-                <label for="categorySelect">Course/Forking:</label>
+                <label for="categorySelect">Rata / hajonta:</label>
                 <select id="categorySelect" disabled>
-                    <option value="">Select category...</option>
+                    <option value="">Valitse...</option>
                 </select>
 
-                <label for="metricSelect">Metric:</label>
+                <label for="metricSelect">Näytä:</label>
                 <select id="metricSelect">
-                    <option value="time">Time Behind Leader</option>
-                    <option value="cumulative">Time</option>
-                    <option value="position">Position</option>
+                    <option value="time">Aika jäljessä</option>
+                    <option value="cumulative">Kumulatiivinen aika</option>
+                    <option value="position">Sijoitus</option>
                 </select>
 
-                <button id="selectAllRunnersBtn" type="button">Select All</button>
-                <button id="deselectAllRunnersBtn" type="button">Deselect All</button>
+                <button id="selectAllRunnersBtn" type="button">Valitse kaikki</button>
+                <button id="deselectAllRunnersBtn" type="button">Poista valinnat</button>
             </div>
 
             <div class="chart-container">
@@ -229,23 +228,23 @@
 
             <div class="stats">
                 <div class="stat-card">
-                    <div class="stat-label">Total Controls</div>
+                    <div class="stat-label">Rasteja yhteensä</div>
                     <div class="stat-value" id="controlCount">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Runners with valid result</div>
+                    <div class="stat-label">Kilpailijoita</div>
                     <div class="stat-value" id="runnerCount">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Courses / Forkings</div>
+                    <div class="stat-label">Ratoja / hajontoja</div>
                     <div class="stat-value" id="categoryCount">-</div>
                 </div>
             </div>
 
             <div class="legend-info">
-                <strong>ℹ️ How to read the graph:</strong><br>
-                Each line represents a runner's progression through the common controls.
-                Time mode shows seconds behind leader, position mode shows rank at each control.
+                <strong>Kuinka kuvaajaa luetaan:</strong><br>
+                Jokainen viiva kuvaa kilpailijan etenemistä yhteisten rastien kautta.
+                Aika jäljessä -tila näyttää tappion sekunteina, sijoitus-tila näyttää sijoituksen kullakin rastilla.
             </div>
         </div>
     </div>
@@ -422,12 +421,12 @@
 
             async loadFromUrl(url) {
                 if (!url) {
-                    this.showMessage('Please enter a valid URL', 'error');
+                    this.showMessage('Anna kelvollinen URL', 'error');
                     return;
                 }
 
                 try {
-                    this.showMessage('Fetching race data ...', 'info');
+                    this.showMessage('Haetaan tietoja...', 'info');
                     const response = await fetch(url);
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
@@ -436,7 +435,7 @@
                     this.loadAndParse(jsonData);
                 } catch (err) {
                     console.error('Fetch error:', err);
-                    this.showMessage('Unable to fetch file: ' + err.message, 'error');
+                    this.showMessage('Haku epäonnistui: ' + err.message, 'error');
                 }
             }
 
@@ -463,7 +462,7 @@
                     Object.values(this.categories).forEach(cat => totalRunners += cat.runners.length);
 
                     if (categoryCount === 0) {
-                        this.showMessage('No valid race courses found in file', 'error');
+                        this.showMessage('Tiedostosta ei löytynyt kilpailutietoja', 'error');
                         return false;
                     }
 
@@ -471,11 +470,11 @@
                     this.categories = { ...this.categories, ...combinedCategories };
 
                     this.initializeUI();
-                    this.showMessage(`Successfully loaded ${categoryCount} courses with ${totalRunners} runners`, 'success');
+                    this.showMessage(`Haettu ${categoryCount} sarjaa, ${totalRunners} kilpailijaa`, 'success');
                     return true;
                 } catch (err) {
                     console.error('Parse error:', err);
-                    this.showMessage('Error parsing JSON: ' + err.message, 'error');
+                    this.showMessage('Jäsennysvirhe: ' + err.message, 'error');
                     return false;
                 }
             }
@@ -516,7 +515,7 @@
             }
 
             createCombinedCategory(categories) {
-                const categoryNames = Object.keys(categories).filter(name => !name.includes('All Forkings'));
+                const categoryNames = Object.keys(categories).filter(name => !name.includes('Kaikki hajonnat'));
                 if (categoryNames.length === 0) return null;
 
                 const entryStats = {};
@@ -563,7 +562,7 @@
                 });
 
                 return {
-                    categoryName: 'All Forkings',
+                    categoryName: 'Kaikki hajonnat',
                     controls: commonEntries.map(entry => entry.control),
                     commonEntries: commonEntries,
                     runners: mappedRunners.filter(runner => runner.times.some(t => t !== null))
@@ -571,7 +570,7 @@
             }
 
             createCombinedCategories(categories) {
-                const sourceEntries = Object.entries(categories).filter(([name]) => !name.includes('All Forkings'));
+                const sourceEntries = Object.entries(categories).filter(([name]) => !name.includes('Kaikki hajonnat'));
                 if (sourceEntries.length === 0) return {};
 
                 const groups = new Map();
@@ -591,8 +590,8 @@
                     if (!merged) return;
 
                     const combinedName = hasMultipleGroups
-                        ? `${key}  All Forkings `
-                        : ' All Forkings';
+                        ? `${key}  Kaikki hajonnat `
+                        : ' Kaikki hajonnat';
 
                     merged.categoryName = combinedName;
                     merged.groupKey = key;
@@ -702,15 +701,15 @@
 
                 const ctx = document.getElementById('raceChart').getContext('2d');
                 const yAxisLabel = metric === 'time'
-                    ? 'Time behind leader (seconds)'
+                    ? 'Aika jäljessä (sekuntia)'
                     : metric === 'cumulative'
-                        ? 'Cumulative time (seconds)'
-                        : 'Position (1st = best)';
+                        ? 'Kumulatiivinen aika (sekuntia)'
+                        : 'Sijoitus (1 = paras)';
                 const title = metric === 'time'
-                    ? `${categoryName} - Time Behind Leader at Each Control (${selectedRunners.length} runners)`
+                    ? `${categoryName} - Aika jäljessä leimatessa (${selectedRunners.length} juoksijaa)`
                     : metric === 'cumulative'
-                        ? `${categoryName} - Cumulative Time at Each Control (${selectedRunners.length} runners)`
-                        : `${categoryName} - Runner Position at Each Control (${selectedRunners.length} runners)`;
+                        ? `${categoryName} - Kumulatiivinen aika leimatessa (${selectedRunners.length} juoksijaa)`
+                        : `${categoryName} - Sijoitus leimatessa (${selectedRunners.length} juoksijaa)`;
 
                 this.chart = new Chart(ctx, {
                     type: 'line',
@@ -778,7 +777,7 @@
                                 max: xMax,
                                 title: {
                                     display: true,
-                                    text: 'Race Progress (control number/code)'
+                                    text: 'Kilpailun kulku (rastinumero/koodi)'
                                 },
                                 afterBuildTicks: function (scale) {
                                     scale.ticks = xPositions.map((pos, i) => ({ value: pos }));
@@ -797,11 +796,11 @@
 
                 let legendText;
                 if (metric === 'time') {
-                    legendText = `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's time behind the leader at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the time gap in seconds (smaller is better).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners and recalculate the leader among selected runners.`;
+                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Värikäs viiva kuvaa kilpailijan aikatappiota johtavaan kilpailijaan kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää tappion sekunteina (pienempi = parempi).<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – johtaja lasketaan uudelleen valittuina olevista.`;
                 } else if (metric === 'cumulative') {
-                    legendText = `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's cumulative elapsed time from race start at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows total elapsed time in seconds (smaller is better).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners for a cleaner comparison.`;
+                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Värikäs viiva kuvaa kilpailijan kertynyttä aikaa lähdöstä kullakin rastilla. X-akselin välit vastaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää radalla käytetyn kokonaisajan sekunteina.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – johtaja lasketaan uudelleen valittuina olevista.`;
                 } else {
-                    legendText = `<strong>ℹ️ How to read the graph:</strong><br>Each colored line represents a runner's position at each control point.<br>The X-axis spacing reflects average time between controls (dropping worst 20% of results), and the Y-axis shows the position (1st = best).<br><strong>💡 Tip:</strong> Click legend items to show/hide runners and recalculate positions among selected runners.`;
+                    legendText = `<strong>Kuinka kuvaajaa luetaan:</strong><br>Värikäs viiva kuvaa juoksijan sijoitusta kullakin rastilla. X-akselin välit kuvaavat rastivälin keskiarvoaikaa (hitain 20 % poistettu), ja Y-akseli näyttää sijoituksen.<br><strong>💡</strong> Valitse klikkaamalla selitteestä kilpailija pois/päälle – sijoitukset lasketaan uudelleen valittuina olevista.`;
                 }
                 document.querySelector('.legend-info').innerHTML = legendText;
                 this.updateStats();
@@ -885,7 +884,7 @@
                 let totalControls = 0;
                 let totalRunners = 0;
                 const baseCategories = Object.entries(this.categories)
-                    .filter(([name]) => !name.includes('All Forkings'))
+                    .filter(([name]) => !name.includes('Kaikki hajonnat'))
                     .map(([, cat]) => cat);
                 const courseNames = new Set();
                 const forkingNames = new Set();
@@ -942,7 +941,7 @@
             } else {
                 const file = document.getElementById('fileInput').files[0];
                 if (!file) {
-                    visualizer.showMessage('Please select a file', 'error');
+                    visualizer.showMessage('Valitse tiedosto', 'error');
                     return;
                 }
                 const reader = new FileReader();
@@ -952,11 +951,11 @@
                         const jsonData = JSON.parse(rawText);
                         visualizer.loadAndParse(jsonData);
                     } catch (err) {
-                        visualizer.showMessage('Error parsing JSON file: ' + err.message, 'error');
+                        visualizer.showMessage('Jäsennysvirhe: ' + err.message, 'error');
                     }
                 };
                 reader.onerror = () => {
-                    visualizer.showMessage('Error reading file', 'error');
+                    visualizer.showMessage('Tiedoston lukeminen epäonnistui', 'error');
                 };
                 reader.readAsText(file, 'utf-8');
             }
