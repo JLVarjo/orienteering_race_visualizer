@@ -13,70 +13,144 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --page-bg: #eef1ea;
+            --page-bg-top: #dfe5d8;
+            --surface: #fbfbf7;
+            --surface-alt: #f3f5ee;
+            --surface-strong: #ffffff;
+            --border: #d2d7ca;
+            --border-strong: #bcc4b3;
+            --text: #223127;
+            --text-soft: #566255;
+            --text-muted: #7a8477;
+            --accent: #2d6a4f;
+            --accent-dark: #1b4332;
+            --accent-soft: #d8f3dc;
+            --info-bg: #e7eff5;
+            --info-text: #31556f;
+            --success-bg: #e7f1e8;
+            --success-text: #356346;
+            --error-bg: #f7e8e4;
+            --error-text: #98463d;
+            --shadow: 0 20px 44px rgba(42, 54, 33, 0.10);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Georgia, 'Times New Roman', serif;
+            background:
+                linear-gradient(180deg, var(--page-bg-top) 0, var(--page-bg) 180px, var(--page-bg) 100%);
             min-height: 100vh;
+            color: var(--text);
             padding: 20px;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 250, 245, 0.98));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
             padding: 30px;
         }
 
         h1 {
-            color: #333;
+            color: var(--text);
             margin-bottom: 10px;
             text-align: center;
+            font-family: system-ui, sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: normal;
         }
 
         .subtitle {
             text-align: center;
-            color: #666;
+            color: var(--text-soft);
             margin-bottom: 30px;
             font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .upload-section {
-            background: #f8f9fa;
+            background: linear-gradient(180deg, var(--surface-alt), var(--surface));
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 30px;
-            border: 2px dashed #ddd;
+            border: 1px solid var(--border);
+        }
+
+        #inputTypeSelector {
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            color: var(--text-soft);
+        }
+
+        #inputTypeSelector label {
+            font-family: inherit;
+        }
+
+        .upload-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-soft);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .file-input-wrapper {
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
-        #urlInput {
+        #urlInput,
+        #fileInput {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
+            min-width: 240px;
+            padding: 11px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            background: var(--surface-strong);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 400;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #fileInput::file-selector-button {
+            font: inherit;
+            color: var(--text);
+            background: var(--accent-soft);
+            border: 1px solid var(--border);
             border-radius: 6px;
+            padding: 6px 10px;
+            margin-right: 10px;
+            cursor: pointer;
         }
 
         button {
             padding: 10px 20px;
-            background: #667eea;
+            background: #2d6a4f;
             color: white;
-            border: none;
-            border-radius: 6px;
+            border: 1px solid #1b4332;
+            border-radius: 999px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            transition: background 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 10px 22px rgba(27, 67, 50, 0.18);
         }
 
         button:hover {
-            background: #764ba2;
+            background: #1b4332;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(27, 67, 50, 0.22);
         }
 
         .controls {
@@ -92,20 +166,31 @@
             align-items: center;
             gap: 8px;
             font-size: 14px;
-            color: #555;
+            color: var(--text-soft);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .controls select {
             padding: 10px 15px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            transition: border-color 0.3s;
+            color: var(--text);
+            background: var(--surface-strong);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .controls select:hover {
-            border-color: #667eea;
+            border-color: var(--accent);
+        }
+
+        .controls select:focus,
+        #urlInput:focus,
+        #fileInput:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(90, 111, 58, 0.12);
         }
 
         .chart-layout {
@@ -120,24 +205,31 @@
             height: 500px;
             flex: 1;
             min-width: 0;
+            background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
         }
 
         .runner-legend-panel {
             width: 280px;
             height: 500px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: linear-gradient(180deg, var(--surface), var(--surface-alt));
             display: flex;
             flex-direction: column;
         }
 
         .runner-legend-title {
             padding: 12px;
-            border-bottom: 1px solid #e6e6e6;
+            border-bottom: 1px solid var(--border);
             font-size: 13px;
             font-weight: 700;
-            color: #444;
+            color: var(--text);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .runner-legend-list {
@@ -156,18 +248,23 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            color: #333;
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .runner-legend-item:hover {
-            background: #f0f3ff;
+            background: var(--accent-soft);
         }
 
         .runner-legend-color {
             width: 12px;
             height: 12px;
-            border-radius: 2px;
+            border-radius: 999px;
             flex: 0 0 12px;
+        }
+
+        .runner-legend-item input {
+            accent-color: var(--accent);
         }
 
         .runner-legend-name {
@@ -196,60 +293,68 @@
         }
 
         .stat-card {
-            background: #f8f9fa;
+            background: linear-gradient(180deg, var(--surface), var(--surface-alt));
             padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--accent);
         }
 
         .stat-label {
             font-size: 12px;
-            color: #999;
+            color: var(--text-muted);
             text-transform: uppercase;
             font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 0.05em;
         }
 
         .stat-value {
-            font-size: 20px;
-            color: #333;
+            font-size: 22px;
+            color: var(--text);
             margin-top: 5px;
             font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-variant-numeric: tabular-nums;
         }
 
         .message {
             padding: 15px;
-            border-radius: 6px;
+            border-radius: 10px;
             margin-bottom: 20px;
             border: 1px solid;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .message.success {
-            background: #efe;
-            color: #3c3;
-            border-color: #cfc;
+            background: var(--success-bg);
+            color: var(--success-text);
+            border-color: rgba(53, 99, 70, 0.22);
         }
 
         .message.error {
-            background: #fee;
-            color: #c33;
-            border-color: #fcc;
+            background: var(--error-bg);
+            color: var(--error-text);
+            border-color: rgba(152, 70, 61, 0.20);
         }
 
         .message.info {
-            background: #eef;
-            color: #33c;
-            border-color: #ccf;
+            background: var(--info-bg);
+            color: var(--info-text);
+            border-color: rgba(49, 85, 111, 0.18);
         }
 
         .legend-info {
             margin-top: 20px;
             padding: 15px;
-            background: #f0f7ff;
-            border-radius: 6px;
-            border-left: 4px solid #667eea;
+            background: linear-gradient(180deg, #f5f8ef, #eef3e6);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
             font-size: 13px;
-            color: #555;
+            color: var(--text-soft);
             line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
     </style>
 </head>
@@ -259,7 +364,7 @@
         <h1 id="pageTitle">Kilpailuanalyysi</h1>
 
         <div id="uploadSection" class="upload-section">
-            <div id="inputTypeSelector" style="margin-bottom: 15px;">
+            <div id="inputTypeSelector">
                 <label><input type="radio" name="inputType" value="url" checked> Lataa URL:sta</label>
                 <label style="margin-left: 20px;"><input type="radio" name="inputType" value="file"> Lataa
                     tiedostosta</label>
@@ -271,7 +376,7 @@
                 <input id="fileInput" type="file" accept=".json,application/json">
             </div>
             <button onclick="loadData()">Lataa</button>
-            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+            <div class="upload-note">
                 📡 URL-lataus vaatii saman palvelimen (same-origin) tai CORS-tuen.
             </div>
         </div>
@@ -780,6 +885,11 @@
                 if (this.chart) this.chart.destroy();
 
                 const ctx = document.getElementById('raceChart').getContext('2d');
+                const css = getComputedStyle(document.documentElement);
+                const themeText = css.getPropertyValue('--text').trim();
+                const themeSoft = css.getPropertyValue('--text-soft').trim();
+                const themeMuted = css.getPropertyValue('--text-muted').trim();
+                const themeBorder = css.getPropertyValue('--border').trim();
                 const yAxisLabel = metric === 'time'
                     ? 'Aika jäljessä (sekuntia)'
                     : metric === 'cumulative'
@@ -804,9 +914,15 @@
                             title: {
                                 display: true,
                                 text: title,
-                                font: { size: 14, weight: 'bold' }
+                                color: themeText,
+                                font: { size: 15, weight: 'bold', family: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }
                             },
                             tooltip: {
+                                backgroundColor: 'rgba(34, 49, 39, 0.94)',
+                                titleColor: '#ffffff',
+                                bodyColor: '#ffffff',
+                                borderColor: themeBorder,
+                                borderWidth: 1,
                                 callbacks: {
                                     // Hide tooltip title (x position line).
                                     title: () => ''
@@ -820,7 +936,16 @@
                             y: {
                                 title: {
                                     display: true,
-                                    text: yAxisLabel
+                                    text: yAxisLabel,
+                                    color: themeSoft,
+                                    font: { family: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', weight: '600' }
+                                },
+                                grid: {
+                                    color: themeBorder
+                                },
+                                ticks: {
+                                    color: themeSoft,
+                                    font: { family: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }
                                 },
                                 reverse: true,
                                 beginAtZero: true
@@ -831,12 +956,19 @@
                                 max: xMax,
                                 title: {
                                     display: true,
-                                    text: 'Kilpailun kulku (rastinumero/koodi)'
+                                    text: 'Kilpailun kulku (rastinumero/koodi)',
+                                    color: themeSoft,
+                                    font: { family: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', weight: '600' }
+                                },
+                                grid: {
+                                    color: themeBorder
                                 },
                                 afterBuildTicks: function (scale) {
                                     scale.ticks = xPositions.map((pos, i) => ({ value: pos }));
                                 },
                                 ticks: {
+                                    color: themeMuted,
+                                    font: { family: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', size: 11 },
                                     callback: function (value, index) {
                                         return (originalIndices[index] + 1) + '[' + controlLabels[index] + ']';
                                     },
