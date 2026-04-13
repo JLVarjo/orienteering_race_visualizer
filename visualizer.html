@@ -939,7 +939,17 @@
                                 borderWidth: 1,
                                 callbacks: {
                                     // Hide tooltip title (x position line).
-                                    title: () => ''
+                                    title: () => '',
+                                    label: (context) => {
+                                        const prefix = context.dataset?.label ? `${context.dataset.label}: ` : '';
+                                        const value = context.parsed?.y;
+
+                                        if (metric === 'time' || metric === 'cumulative') {
+                                            return prefix + this.formatTooltipTime(value);
+                                        }
+
+                                        return prefix + value;
+                                    }
                                 }
                             },
                             legend: {
@@ -1096,6 +1106,31 @@
 
             calculateCumulativeTimes(runnerTimes) {
                 return runnerTimes.map(time => (time === null || time === undefined ? null : time));
+            }
+
+            formatTooltipTime(secondsValue) {
+                if (secondsValue === null || secondsValue === undefined || !Number.isFinite(secondsValue)) {
+                    return '-';
+                }
+
+                const sign = secondsValue < 0 ? '-' : '';
+                const totalSeconds = Math.abs(Math.round(secondsValue));
+
+                if (totalSeconds < 60) {
+                    return `${sign}${totalSeconds}`;
+                }
+
+                if (totalSeconds >= 3600) {
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const remaining = totalSeconds % 3600;
+                    const minutes = Math.floor(remaining / 60);
+                    const seconds = remaining % 60;
+                    return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return `${sign}${minutes}:${String(seconds).padStart(2, '0')}`;
             }
 
             generateColor(index, total) {
