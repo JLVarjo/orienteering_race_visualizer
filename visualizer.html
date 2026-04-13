@@ -393,7 +393,7 @@
                 <label for="metricSelect">Näytä:</label>
                 <select id="metricSelect">
                     <option value="time">Vertailu johtavaan</option>
-                    <option value="cumulative">Kumulatiivinen aika</option>
+                    <option value="cumulative">Kokonaisaika</option>
                     <option value="position">Sijoitus</option>
                 </select>
 
@@ -907,12 +907,12 @@
                 const yAxisLabel = metric === 'time'
                     ? 'Aika jäljessä (sekuntia)'
                     : metric === 'cumulative'
-                        ? 'Kumulatiivinen aika (sekuntia)'
+                        ? 'Kokonaisaika (sekuntia)'
                         : 'Sijoitus (1 = paras)';
                 const title = metric === 'time'
                     ? `${categoryName} - Vertailu johtavaan (${selectedRunners.length} suunnistajaa)`
                     : metric === 'cumulative'
-                        ? `${categoryName} - Kumulatiivinen aika (${selectedRunners.length} suunnistajaa)`
+                        ? `${categoryName} - Kokonaisaika (${selectedRunners.length} suunnistajaa)`
                         : `${categoryName} - Sijoitus (${selectedRunners.length} suunnistajaa)`;
 
                 this.chart = new Chart(ctx, {
