@@ -788,16 +788,25 @@
 
             calculateXPositions(controls, runners) {
                 const numControls = controls.length;
-                if (numControls <= 1) return Array(numControls).fill(0).map((_, i) => i);
+                if (numControls === 0) return [];
 
-                const segmentTimes = Array(numControls - 1).fill().map(() => []);
+                const segmentTimes = Array(numControls).fill().map(() => []);
 
                 runners.forEach(runner => {
-                    for (let i = 1; i < runner.times.length; i++) {
-                        const time1 = runner.times[i - 1];
-                        const time2 = runner.times[i];
-                        if (time1 !== null && time2 !== null && time1 < time2) {
-                            segmentTimes[i - 1].push(time2 - time1);
+                    for (let i = 0; i < runner.times.length; i++) {
+                        const currentTime = runner.times[i];
+                        if (currentTime === null || currentTime === undefined) continue;
+
+                        if (i === 0) {
+                            if (currentTime > 0) {
+                                segmentTimes[0].push(currentTime);
+                            }
+                            continue;
+                        }
+
+                        const previousTime = runner.times[i - 1];
+                        if (previousTime !== null && previousTime !== undefined && previousTime < currentTime) {
+                            segmentTimes[i].push(currentTime - previousTime);
                         }
                     }
                 });
@@ -811,9 +820,11 @@
                     return remaining.length > 0 ? sum / remaining.length : 1;
                 });
 
-                const positions = [0];
+                const positions = [];
+                let elapsed = 0;
                 for (let i = 0; i < averages.length; i++) {
-                    positions.push(positions[i] + averages[i]);
+                    elapsed += averages[i];
+                    positions.push(elapsed);
                 }
 
                 return positions;
@@ -841,7 +852,7 @@
                 });
 
                 const xPositions = this.calculateXPositions(category.controls, category.runners);
-                const xMin = xPositions.length > 0 ? xPositions[0] : 0;
+                const xMin = 0;
                 const xMaxRaw = xPositions.length > 0 ? xPositions[xPositions.length - 1] : 1;
                 const xMax = xMaxRaw === xMin ? xMin + 1 : xMaxRaw;
                 const controlLabels = category.controls.map(c => `${c}`);
@@ -861,11 +872,14 @@
                             ? this.calculateCumulativeTimes(runner.times)
                             : this.calculatePositions(runner.times, referenceRunners);
                     const isSelected = this.selectedRunners.has(runner.name);
+                    const startValue = metric === 'position' ? 1 : 0;
 
-                    const data = yData.map((y, i) => ({
-                        x: xPositions[i],
-                        y: y
-                    })).filter(point => point.y !== null);
+                    const data = [{ x: 0, y: startValue }]
+                        .concat(yData.map((y, i) => ({
+                            x: xPositions[i],
+                            y: y
+                        })))
+                        .filter(point => point.y !== null);
 
                     return {
                         label: runner.name,
@@ -964,13 +978,16 @@
                                     color: themeBorder
                                 },
                                 afterBuildTicks: function (scale) {
-                                    scale.ticks = xPositions.map((pos, i) => ({ value: pos }));
+                                    scale.ticks = [{ value: 0 }, ...xPositions.map((pos) => ({ value: pos }))];
                                 },
                                 ticks: {
                                     color: themeMuted,
                                     font: { family: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', size: 11 },
                                     callback: function (value, index) {
-                                        return (originalIndices[index] + 1) + '[' + controlLabels[index] + ']';
+                                        if (index === 0) {
+                                            return 'Lähtö';
+                                        }
+                                        return (originalIndices[index - 1] + 1) + '[' + controlLabels[index - 1] + ']';
                                     },
                                     maxRotation: 90,
                                     minRotation: 45
