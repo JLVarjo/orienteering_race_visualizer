@@ -527,7 +527,8 @@
                         });
 
                         results.forEach((result) => {
-                            const isValid = this.isValidResult(result);
+                            const statusCode = this.getResultStatusCode(result);
+                            const isValid = statusCode === 'ok';
 
                             const runnerName = (result?.name || '').trim();
                             if (!runnerName) return;
@@ -541,7 +542,7 @@
                                 return;
                             }
 
-                            course.runners.push({ name: runnerName, times, valid: isValid });
+                            course.runners.push({ name: runnerName, times, valid: isValid, status: statusCode });
                         });
 
                         coursesById.forEach((course) => {
@@ -602,10 +603,13 @@
                 return normalized;
             }
 
-            isValidResult(result) {
+            getResultStatusCode(result) {
                 const status = String(result?.status ?? '').trim().toLowerCase();
-                if (!status) return false;
-                return status === 'ok';
+                return status || 'unknown';
+            }
+
+            isValidResult(result) {
+                return this.getResultStatusCode(result) === 'ok';
             }
 
             getFirstCourseKey(coursesById) {
@@ -816,7 +820,8 @@
                     return {
                         name: `${runner.name} (${runner.category})`,
                         times: mappedTimes,
-                        valid: true
+                        valid: true,
+                        status: 'ok'
                     };
                 });
 
@@ -952,11 +957,15 @@
                     const color = this.generateColor(idx, category.runners.length);
                     const isActive = runner.valid || this.showDisqualified;
                     const isSelected = isActive && this.selectedRunners.has(runner.name);
-                    const yData = metric === 'time'
+                    const yDataRaw = metric === 'time'
                         ? this.calculateTimeDifferences(runner.times, referenceRunners, comparisonRunner)
                         : metric === 'cumulative'
                             ? this.calculateCumulativeTimes(runner.times)
                             : this.calculatePositions(runner.times, referenceRunners);
+                    const yData = [...yDataRaw];
+                    if (runner.status === 'dnf' && yData.length > 0) {
+                        yData[yData.length - 1] = null;
+                    }
                     const startValue = metric === 'position' ? 1 : 0;
 
                     const data = [{ x: 0, y: startValue }]
@@ -1132,7 +1141,9 @@
 
                     const name = document.createElement('span');
                     name.className = 'runner-legend-name';
-                    name.textContent = runner.valid ? runner.name : `${runner.name} (hylätty)`;
+                    name.textContent = runner.valid
+                        ? runner.name
+                        : `${runner.name} (${this.getNonValidStatusText(runner.status)})`;
 
                     checkbox.addEventListener('change', () => {
                         this.allowEmptySelection = true;
@@ -1163,6 +1174,14 @@
                     }
                     return position;
                 });
+            }
+
+            getNonValidStatusText(statusCode) {
+                const normalized = String(statusCode || '').trim().toLowerCase();
+                if (normalized === 'dnf') return 'keskeyttänyt';
+                if (normalized === 'dsq') return 'hylätty';
+                if (normalized === 'no time') return 'ei aikaa';
+                return 'hylätty';
             }
 
             getComparisonRunner(allRunners) {
