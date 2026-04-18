@@ -267,6 +267,58 @@
             accent-color: var(--accent);
         }
 
+        .runner-legend-item.runner-disqualified {
+            opacity: 0.65;
+            font-style: italic;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-soft);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .toggle-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            background: var(--border-strong);
+            border-radius: 999px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle-label input:checked+.toggle-slider {
+            background: var(--accent);
+        }
+
+        .toggle-label input:checked+.toggle-slider::after {
+            transform: translateX(16px);
+        }
+
         .runner-legend-name {
             min-width: 0;
             overflow: hidden;
@@ -399,6 +451,11 @@
 
                 <button id="selectAllRunnersBtn" type="button">Valitse kaikki</button>
                 <button id="deselectAllRunnersBtn" type="button">Poista valinnat</button>
+                <label class="toggle-label">
+                    <input type="checkbox" id="showDisqualifiedToggle">
+                    <span class="toggle-slider"></span>
+                    Näytä hylätyt (vain yksittäiset radat)
+                </label>
             </div>
 
             <div class="chart-layout">
@@ -470,7 +527,7 @@
                         });
 
                         results.forEach((result) => {
-                            if (!this.isValidResult(result)) return;
+                            const isValid = this.isValidResult(result);
 
                             const runnerName = (result?.name || '').trim();
                             if (!runnerName) return;
@@ -484,7 +541,7 @@
                                 return;
                             }
 
-                            course.runners.push({ name: runnerName, times });
+                            course.runners.push({ name: runnerName, times, valid: isValid });
                         });
 
                         coursesById.forEach((course) => {
@@ -575,6 +632,7 @@
                 this.parser = new RaceParser();
                 this.selectedRunners = new Set();
                 this.allowEmptySelection = false;
+                this.showDisqualified = false;
                 this.defaultPageTitle = document.title;
                 this.defaultHeaderTitle = document.getElementById('pageTitle').textContent;
 
@@ -586,6 +644,23 @@
                 document.getElementById('metricSelect').addEventListener('change', () => this.visualize());
                 document.getElementById('selectAllRunnersBtn').addEventListener('click', () => this.selectAllRunners());
                 document.getElementById('deselectAllRunnersBtn').addEventListener('click', () => this.deselectAllRunners());
+                document.getElementById('showDisqualifiedToggle').addEventListener('change', () => {
+                    this.showDisqualified = document.getElementById('showDisqualifiedToggle').checked;
+                    const categoryName = document.getElementById('categorySelect').value;
+                    if (categoryName && this.categories[categoryName]) {
+                        const category = this.categories[categoryName];
+                        category.runners.forEach(runner => {
+                            if (!runner.valid) {
+                                if (this.showDisqualified) {
+                                    this.selectedRunners.add(runner.name);
+                                } else {
+                                    this.selectedRunners.delete(runner.name);
+                                }
+                            }
+                        });
+                    }
+                    this.visualize();
+                });
             }
 
             selectAllRunners() {
@@ -594,7 +669,9 @@
 
                 this.allowEmptySelection = false;
                 this.selectedRunners.clear();
-                this.categories[categoryName].runners.forEach(runner => this.selectedRunners.add(runner.name));
+                this.categories[categoryName].runners
+                    .filter(runner => runner.valid || this.showDisqualified)
+                    .forEach(runner => this.selectedRunners.add(runner.name));
                 this.visualize(true);
             }
 
@@ -679,7 +756,9 @@
 
                 if (!categoryName || !this.categories[categoryName]) return;
 
-                this.categories[categoryName].runners.forEach(runner => this.selectedRunners.add(runner.name));
+                this.categories[categoryName].runners
+                    .filter(runner => runner.valid)
+                    .forEach(runner => this.selectedRunners.add(runner.name));
             }
 
             populateCategories() {
@@ -724,7 +803,7 @@
                 categoryNames.forEach(catName => {
                     const category = categories[catName];
                     const runnerCategoryLabel = category.forkingName || catName;
-                    category.runners.forEach(runner => {
+                    category.runners.filter(r => r.valid).forEach(runner => {
                         allRunners.push({ ...runner, category: runnerCategoryLabel });
                     });
                 });
@@ -736,7 +815,8 @@
                     });
                     return {
                         name: `${runner.name} (${runner.category})`,
-                        times: mappedTimes
+                        times: mappedTimes,
+                        valid: true
                     };
                 });
 
@@ -838,12 +918,16 @@
 
                 const category = this.categories[categoryName];
 
+                const activeRunners = category.runners.filter(r => r.valid || this.showDisqualified);
+
                 if (this.selectedRunners.size === 0 && !this.allowEmptySelection) {
-                    category.runners.forEach(runner => this.selectedRunners.add(runner.name));
+                    activeRunners.forEach(runner => this.selectedRunners.add(runner.name));
                 }
 
-                const selectedRunners = category.runners.filter(runner => this.selectedRunners.has(runner.name));
-                const referenceRunners = selectedRunners.length > 0 ? selectedRunners : category.runners;
+                const selectedRunners = activeRunners.filter(runner => this.selectedRunners.has(runner.name));
+                const validRunners = category.runners.filter(r => r.valid);
+                const validSelected = selectedRunners.filter(r => r.valid);
+                const referenceRunners = validSelected.length > 0 ? validSelected : validRunners;
 
                 selectedRunners.sort((a, b) => {
                     const aTime = a.times[a.times.length - 1] || Infinity;
@@ -866,12 +950,13 @@
 
                 const datasets = category.runners.map((runner, idx) => {
                     const color = this.generateColor(idx, category.runners.length);
+                    const isActive = runner.valid || this.showDisqualified;
+                    const isSelected = isActive && this.selectedRunners.has(runner.name);
                     const yData = metric === 'time'
                         ? this.calculateTimeDifferences(runner.times, referenceRunners, comparisonRunner)
                         : metric === 'cumulative'
                             ? this.calculateCumulativeTimes(runner.times)
                             : this.calculatePositions(runner.times, referenceRunners);
-                    const isSelected = this.selectedRunners.has(runner.name);
                     const startValue = metric === 'position' ? 1 : 0;
 
                     const data = [{ x: 0, y: startValue }]
@@ -892,7 +977,8 @@
                         pointRadius: 4,
                         pointHoverRadius: 6,
                         pointBackgroundColor: color,
-                        borderWidth: 2
+                        borderWidth: 2,
+                        borderDash: runner.valid ? [] : [5, 5]
                     };
                 });
 
@@ -1025,12 +1111,16 @@
                 const legendList = document.getElementById('runnerLegendList');
                 if (!legendTitle || !legendList || !category) return;
 
-                legendTitle.textContent = `Kilpailijat (${this.selectedRunners.size}/${category.runners.length})`;
+                const activeRunners = category.runners.filter(r => r.valid || this.showDisqualified);
+                legendTitle.textContent = `Kilpailijat (${this.selectedRunners.size}/${activeRunners.length})`;
                 legendList.innerHTML = '';
 
                 category.runners.forEach((runner, idx) => {
+                    if (!runner.valid && !this.showDisqualified) return;
+
                     const item = document.createElement('label');
                     item.className = 'runner-legend-item';
+                    if (!runner.valid) item.classList.add('runner-disqualified');
 
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
@@ -1042,7 +1132,7 @@
 
                     const name = document.createElement('span');
                     name.className = 'runner-legend-name';
-                    name.textContent = runner.name;
+                    name.textContent = runner.valid ? runner.name : `${runner.name} (hylätty)`;
 
                     checkbox.addEventListener('change', () => {
                         this.allowEmptySelection = true;
@@ -1171,7 +1261,7 @@
 
                 baseCategories.forEach(cat => {
                     totalControls = Math.max(totalControls, cat.controls.length);
-                    totalRunners += cat.runners.length;
+                    totalRunners += cat.runners.filter(r => r.valid).length;
 
                     const courseName = cat.courseName || cat.groupKey || 'all';
                     const fallbackForking = cat.categoryName && cat.categoryName.includes(' - ')
