@@ -1,18 +1,18 @@
 {
   "event": "Yhteislähtö Petosenmäki",
   "source": "eresults",
-  "generatedAt": "2026-04-10T13:12:30.104Z",
+  "generatedAt": "2026-04-15T02:39:18.872Z",
   "starts": [
     {
       "label": "klo 18",
       "classes": [
         {
           "id": null,
-          "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "AAA 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "AAA 3.0 km",
               "controls": [
                 "031",
                 "034",
@@ -147,11 +147,11 @@
         },
         {
           "id": null,
-          "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "AAB 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "AAB 3.0 km",
               "controls": [
                 "031",
                 "034",
@@ -340,11 +340,11 @@
         },
         {
           "id": null,
-          "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "BBB 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "BBB 3.0 km",
               "controls": [
                 "032",
                 "033",
@@ -509,17 +509,35 @@
               "totalTime": null,
               "position": null,
               "courseId": null,
-              "splits": null
+              "splits": [
+                302,
+                548,
+                766,
+                1240,
+                -1,
+                -1,
+                -1,
+                2175,
+                -1,
+                -1,
+                -1,
+                -1,
+                2634,
+                2988,
+                3326,
+                3388,
+                -1
+              ]
             }
           ]
         },
         {
           "id": null,
-          "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "BBA 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "BBA 3.0 km",
               "controls": [
                 "032",
                 "033",
@@ -657,7 +675,25 @@
               "totalTime": null,
               "position": null,
               "courseId": null,
-              "splits": null
+              "splits": [
+                241,
+                -1,
+                807,
+                1337,
+                1862,
+                -1,
+                -1,
+                3040,
+                -1,
+                -1,
+                -1,
+                -1,
+                3461,
+                3767,
+                4066,
+                4136,
+                -1
+              ]
             },
             {
               "name": "Hall Anette",
@@ -666,7 +702,25 @@
               "totalTime": null,
               "position": null,
               "courseId": null,
-              "splits": null
+              "splits": [
+                238,
+                -1,
+                810,
+                1342,
+                1877,
+                -1,
+                -1,
+                3033,
+                -1,
+                -1,
+                -1,
+                -1,
+                3454,
+                3763,
+                4062,
+                4128,
+                -1
+              ]
             }
           ]
         }
@@ -677,11 +731,11 @@
       "classes": [
         {
           "id": null,
-          "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "AAA 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "AAA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "AAA 3.0 km",
               "controls": [
                 "031",
                 "034",
@@ -789,11 +843,11 @@
         },
         {
           "id": null,
-          "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "AAB 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "AAB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "AAB 3.0 km",
               "controls": [
                 "031",
                 "034",
@@ -847,11 +901,11 @@
         },
         {
           "id": null,
-          "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "BBB 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "BBB 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "BBB 3.0 km",
               "controls": [
                 "032",
                 "033",
@@ -908,17 +962,35 @@
               "totalTime": null,
               "position": null,
               "courseId": null,
-              "splits": null
+              "splits": [
+                139,
+                260,
+                362,
+                554,
+                825,
+                -1,
+                -1,
+                1136,
+                1355,
+                1502,
+                1594,
+                1700,
+                1912,
+                2038,
+                2167,
+                2189,
+                -1
+              ]
             }
           ]
         },
         {
           "id": null,
-          "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+          "name": "BBA 3.0 km",
           "courses": [
             {
               "id": null,
-              "name": "BBA 3.0 km, tilanne rasteilla, rastivälien ajat",
+              "name": "BBA 3.0 km",
               "controls": [
                 "032",
                 "033",

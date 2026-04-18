@@ -1,18 +1,18 @@
 {
   "event": "Yhteislähtö Litti 10",
   "source": "eresults",
-  "generatedAt": "2026-04-10T13:12:30.075Z",
+  "generatedAt": "2026-04-15T02:39:22.019Z",
   "starts": [
     {
       "label": "klo 18",
       "classes": [
         {
           "id": null,
-          "name": "AAA 4.3 km, tilanne rasteilla, rastivälien ajat",
+          "name": "AAA 4.3 km",
           "courses": [
             {
               "id": null,
-              "name": "AAA 4.3 km, tilanne rasteilla, rastivälien ajat",
+              "name": "AAA 4.3 km",
               "controls": [
                 "031",
                 "034",
@@ -143,18 +143,18 @@
                 1016,
                 1145,
                 1303,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                -1,
+                1448,
+                1667,
+                2081,
+                2193,
+                2292,
+                2322,
+                3040,
+                3150,
+                3347,
+                3690,
+                3787,
                 3787
               ]
             },
@@ -192,11 +192,11 @@
         },
         {
           "id": null,
-          "name": "ABB 4.2 km, tilanne rasteilla, rastivälien ajat",
+          "name": "ABB 4.2 km",
           "courses": [
             {
               "id": null,
-              "name": "ABB 4.2 km, tilanne rasteilla, rastivälien ajat",
+              "name": "ABB 4.2 km",
               "controls": [
                 "031",
                 "034",
@@ -349,7 +349,28 @@
               "totalTime": null,
               "position": null,
               "courseId": null,
-              "splits": null
+              "splits": [
+                216,
+                407,
+                580,
+                638,
+                766,
+                857,
+                926,
+                961,
+                1002,
+                1158,
+                1424,
+                1485,
+                1547,
+                1567,
+                -1,
+                1977,
+                2088,
+                2294,
+                2368,
+                -1
+              ]
             },
             {
               "name": "Korventausta Antti",
@@ -358,7 +379,28 @@
               "totalTime": null,
               "position": null,
               "courseId": null,
-              "splits": null
+              "splits": [
+                338,
+                565,
+                912,
+                1023,
+                1275,
+                1424,
+                1595,
+                1672,
+                1755,
+                2105,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ]
             },
             {
               "name": "Hall Anette",
@@ -367,17 +409,38 @@
               "totalTime": null,
               "position": null,
               "courseId": null,
-              "splits": null
+              "splits": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ]
             }
           ]
         },
         {
           "id": null,
-          "name": "BBB 4.2 km, tilanne rasteilla, rastivälien ajat",
+          "name": "BBB 4.2 km",
           "courses": [
             {
               "id": null,
-              "name": "BBB 4.2 km, tilanne rasteilla, rastivälien ajat",
+              "name": "BBB 4.2 km",
               "controls": [
                 "033",
                 "034",
@@ -527,11 +590,11 @@
         },
         {
           "id": null,
-          "name": "BAA 4.3 km, tilanne rasteilla, rastivälien ajat",
+          "name": "BAA 4.3 km",
           "courses": [
             {
               "id": null,
-              "name": "BAA 4.3 km, tilanne rasteilla, rastivälien ajat",
+              "name": "BAA 4.3 km",
               "controls": [
                 "033",
                 "034",
