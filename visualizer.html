@@ -1128,8 +1128,18 @@
                 legendTitle.textContent = `Kilpailijat (${this.selectedRunners.size}/${activeRunners.length})`;
                 legendList.innerHTML = '';
 
-                category.runners.forEach((runner, idx) => {
+                // Sort runners by finish time for consistent display
+                const sortedRunners = [...category.runners].sort((a, b) => {
+                    const aTime = a.times[a.times.length - 1] || Infinity;
+                    const bTime = b.times[b.times.length - 1] || Infinity;
+                    return aTime - bTime;
+                });
+
+                sortedRunners.forEach((runner, sortedIdx) => {
                     if (!runner.valid && !this.showDisqualified) return;
+
+                    // Find original index for color generation
+                    const originalIdx = category.runners.indexOf(runner);
 
                     const item = document.createElement('label');
                     item.className = 'runner-legend-item';
@@ -1141,7 +1151,7 @@
 
                     const color = document.createElement('span');
                     color.className = 'runner-legend-color';
-                    color.style.backgroundColor = this.generateColor(idx, category.runners.length);
+                    color.style.backgroundColor = this.generateColor(originalIdx, category.runners.length);
 
                     const name = document.createElement('span');
                     name.className = 'runner-legend-name';
