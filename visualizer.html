@@ -195,14 +195,14 @@
 
         .chart-layout {
             display: flex;
-            gap: 16px;
+            gap: 8px;
             align-items: stretch;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
 
         .chart-container {
             position: relative;
-            height: 500px;
+            height: 600px;
             flex: 1;
             min-width: 0;
             background: linear-gradient(180deg, var(--surface-strong), var(--surface));
@@ -213,7 +213,7 @@
 
         .runner-legend-panel {
             width: 280px;
-            height: 500px;
+            height: 600px;
             border: 1px solid var(--border);
             border-radius: 12px;
             background: linear-gradient(180deg, var(--surface), var(--surface-alt));
@@ -326,21 +326,6 @@
             white-space: nowrap;
         }
 
-        @media (max-width: 1050px) {
-            .chart-layout {
-                flex-direction: column;
-            }
-
-            .runner-legend-panel {
-                width: 100%;
-                height: 220px;
-            }
-
-            .chart-container {
-                height: 580px;
-            }
-        }
-
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -411,6 +396,146 @@
             color: var(--text-soft);
             line-height: 1.6;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Smartphone portrait: minimize chrome and prioritize chart height. */
+        @media (max-width: 768px) and (orientation: portrait) {
+            body {
+                padding: 8px;
+            }
+
+            .container {
+                padding: 12px;
+                border-radius: 12px;
+            }
+
+            .controls {
+                margin-bottom: 12px;
+                gap: 10px;
+            }
+
+            .controls select,
+            button {
+                padding: 9px 12px;
+                font-size: 13px;
+            }
+
+            .chart-layout {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 14px;
+            }
+
+            .chart-container {
+                height: min(68dvh, 700px);
+                padding: 8px;
+            }
+
+            .runner-legend-panel {
+                width: 100%;
+                height: min(26dvh, 220px);
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-top: 16px;
+            }
+
+            .legend-info {
+                margin-top: 12px;
+                padding: 12px;
+            }
+
+            body.ultra-focus-mobile .stats,
+            body.ultra-focus-mobile .legend-info {
+                display: none;
+            }
+
+            body.ultra-focus-mobile .chart-container {
+                height: min(82dvh, 860px);
+            }
+
+            body.ultra-focus-mobile .runner-legend-panel {
+                height: min(18dvh, 170px);
+            }
+        }
+
+        /* Smartphone landscape: use most of low viewport height for chart. */
+        @media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+            body {
+                padding: 6px;
+            }
+
+            .container {
+                padding: 10px;
+                border-radius: 10px;
+            }
+
+            h1 {
+                margin-bottom: 6px;
+                font-size: 1.05rem;
+            }
+
+            .controls {
+                margin-bottom: 8px;
+                gap: 8px;
+            }
+
+            .controls label {
+                font-size: 12px;
+            }
+
+            .controls select,
+            button {
+                padding: 7px 10px;
+                font-size: 12px;
+            }
+
+            .chart-layout {
+                flex-direction: row;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+
+            .chart-container {
+                height: min(84dvh, 460px);
+                padding: 7px;
+            }
+
+            .runner-legend-panel {
+                width: min(36vw, 230px);
+                height: min(84dvh, 460px);
+            }
+
+            .stats {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                margin-top: 10px;
+            }
+
+            .stat-card {
+                padding: 10px;
+            }
+
+            .legend-info {
+                margin-top: 8px;
+                padding: 10px;
+                font-size: 12px;
+            }
+
+            body.ultra-focus-mobile .stats,
+            body.ultra-focus-mobile .legend-info {
+                display: none;
+            }
+
+            body.ultra-focus-mobile .chart-container {
+                height: min(92dvh, 520px);
+            }
+
+            body.ultra-focus-mobile .runner-legend-panel {
+                height: min(92dvh, 520px);
+            }
         }
     </style>
 </head>
@@ -669,6 +794,18 @@
                     }
                     this.visualize();
                 });
+
+                this.applyUltraFocusViewportPolicy();
+                window.addEventListener('resize', () => this.applyUltraFocusViewportPolicy());
+            }
+
+            isSmartphoneViewport() {
+                return window.matchMedia('(max-width: 900px)').matches;
+            }
+
+            applyUltraFocusViewportPolicy() {
+                const mobileViewport = this.isSmartphoneViewport();
+                document.body.classList.toggle('ultra-focus-mobile', mobileViewport);
             }
 
             selectAllRunners() {
