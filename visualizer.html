@@ -399,7 +399,7 @@
         }
 
         /* Smartphone portrait: minimize chrome and prioritize chart height. */
-        @media (max-width: 768px) and (orientation: portrait) {
+        @media (max-width: 900px) {
             body {
                 padding: 8px;
             }
@@ -455,14 +455,6 @@
             body.ultra-focus-mobile .chart-layout {
                 flex-direction: column;
             }
-
-            body.ultra-focus-mobile .chart-container {
-                height: min(82dvh, 860px);
-            }
-
-            body.ultra-focus-mobile .runner-legend-panel {
-                height: min(18dvh, 170px);
-            }
         }
 
         /* Smartphone landscape: use most of low viewport height for chart. */
@@ -503,7 +495,7 @@
             }
 
             .chart-container {
-                height: min(84dvh, 460px);
+                height: min(184dvh, 1460px);
                 padding: 7px;
             }
 
@@ -535,15 +527,6 @@
 
             body.ultra-focus-mobile .chart-layout {
                 flex-direction: column;
-            }
-
-            body.ultra-focus-mobile .chart-container {
-                height: min(74dvh, 430px);
-            }
-
-            body.ultra-focus-mobile .runner-legend-panel {
-                width: 100%;
-                height: min(16dvh, 140px);
             }
         }
     </style>
