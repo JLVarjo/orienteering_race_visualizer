@@ -227,7 +227,7 @@
 
         body.ultra-focus-mobile .chart-container {
             width: 100%;
-            height: 600px;
+            height: 450px;
             flex: none;
         }
 
@@ -235,6 +235,57 @@
             width: 100%;
             height: 280px;
             margin-top: 8px;
+        }
+
+        body.ultra-focus-mobile {
+            padding: 8px;
+        }
+
+        body.ultra-focus-mobile .container {
+            padding: 14px;
+        }
+
+        body.ultra-focus-mobile .upload-section {
+            padding: 12px;
+        }
+
+        body.ultra-focus-mobile #urlInput,
+        body.ultra-focus-mobile #fileInput {
+            padding: 8px 10px;
+        }
+
+        body.ultra-focus-mobile #fileInput::file-selector-button {
+            padding: 4px 8px;
+        }
+
+        body.ultra-focus-mobile button {
+            padding: 8px 14px;
+        }
+
+        body.ultra-focus-mobile .controls select {
+            padding: 8px 12px;
+        }
+
+        body.ultra-focus-mobile .chart-container {
+            padding: 8px;
+        }
+
+        body.ultra-focus-mobile .runner-legend-title {
+            padding: 8px 10px;
+        }
+
+        body.ultra-focus-mobile .runner-legend-list {
+            padding: 6px;
+        }
+
+        body.ultra-focus-mobile .runner-legend-item {
+            padding: 4px;
+        }
+
+        body.ultra-focus-mobile .stat-card,
+        body.ultra-focus-mobile .message,
+        body.ultra-focus-mobile .legend-info {
+            padding: 10px;
         }
 
         .runner-legend-title {
@@ -1043,7 +1094,7 @@
                         animation: skipAnimation ? false : undefined,
                         plugins: {
                             title: {
-                                display: true,
+                                display: !ultraFocusMode,
                                 text: title,
                                 color: themeText,
                                 font: { size: 15, weight: 'bold', family: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }
