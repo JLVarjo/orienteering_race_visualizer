@@ -604,11 +604,14 @@
                         coursesById.forEach((course) => {
                             if (course.runners.length === 0) return;
 
+                            const filteredCourse = this.filterControlsWithoutAnySplits(course);
+                            if (filteredCourse.controls.length === 0) return;
+
                             const baseCategoryName = this.buildCategoryName(startLabel, className, course.name);
                             const uniqueName = this.makeUniqueCategoryName(baseCategoryName, categories);
                             categories[uniqueName] = {
-                                controls: course.controls,
-                                runners: course.runners,
+                                controls: filteredCourse.controls,
+                                runners: filteredCourse.runners,
                                 categoryName: uniqueName,
                                 groupKey: startLabel || className,
                                 courseName: startLabel || className,
@@ -657,6 +660,32 @@
                 }
 
                 return normalized;
+            }
+
+            filterControlsWithoutAnySplits(course) {
+                const controls = Array.isArray(course?.controls) ? course.controls : [];
+                const runners = Array.isArray(course?.runners) ? course.runners : [];
+
+                if (controls.length === 0 || runners.length === 0) {
+                    return { controls, runners };
+                }
+
+                const indicesToKeep = controls
+                    .map((_, idx) => idx)
+                    .filter((idx) => runners.some(runner => runner.times[idx] !== null && runner.times[idx] !== undefined));
+
+                const filteredControls = indicesToKeep.map((idx) => controls[idx]);
+                const filteredRunners = runners
+                    .map((runner) => ({
+                        ...runner,
+                        times: indicesToKeep.map((idx) => runner.times[idx])
+                    }))
+                    .filter((runner) => runner.times.some(time => time !== null && time !== undefined));
+
+                return {
+                    controls: filteredControls,
+                    runners: filteredRunners
+                };
             }
 
             getResultStatusCode(result) {
